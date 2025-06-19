@@ -813,18 +813,26 @@
                 </StrictMode>
               );
             } else {
-              console.error("Embed root element 'invoice-generator-embed-root' not found.");
+             console.error("Embed root element 'invoice-generator-embed-root' not found.");
             }
-        <script>
-        </div>
-  function sendHeight() {
-    const height = document.body.scrollHeight;
-    window.parent.postMessage({ type: 'invoiceFrameHeight', height }, '*');
-  }
-  window.addEventListener('load', sendHeight);
-  window.addEventListener('resize', sendHeight);
-  const observer = new MutationObserver(sendHeight);
-  observer.observe(document.body, { childList: true, subtree: true, attributes: true });
-</script>
+        </script>
+    </div>
+    <script>
+      function sendHeight() {
+        const height = document.body.scrollHeight;
+        window.parent.postMessage({ type: 'invoiceFrameHeight', height }, '*');
+      }
+      window.addEventListener('load', sendHeight);
+      window.addEventListener('resize', sendHeight);
+      const observer = new MutationObserver(sendHeight);
+      observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+    </script>
 </body>
 </html>
+
+
+
+
+
+
+
