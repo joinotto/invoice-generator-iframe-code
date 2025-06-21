@@ -320,30 +320,30 @@
         )}
       </div>
       {/* From / To grid, single grid block */}
-      <div className={`grid grid-cols-2 gap-x-8 ${isForPdf ? 'mb-1' : 'mb-10'} ${baseText}`}>
-        <div>
-          <h3 className={`${sectionTitleText} font-semibold uppercase tracking-wider text-gray-600 ${isForPdf ? 'mb-0.5 text-[0.6rem]' : 'mb-3 text-sm'}`}>From</h3>
-          <div className={`${isForPdf ? 'space-y-0 leading-tight' : 'space-y-1'} text-gray-900`}>
-            <p className="font-medium">{state.fromName || 'Your Company Name'}</p>
-            <p className="break-all">{state.fromEmail || 'your.email@example.com'}</p>
-            <p>{state.fromAddress1 || '123 Main St, City, State, Zip'}</p>
-            {state.fromAddress2 && <p>{state.fromAddress2}</p>}
-            {state.showAdditionalFromDetails && state.fromBusinessNumber && (
-              <p>Business #: {state.fromBusinessNumber}</p>
-            )}
-          </div>
-        </div>
-        <div>
-          <h3 className={`${sectionTitleText} font-semibold uppercase tracking-wider text-gray-600 ${isForPdf ? 'mb-0.5 text-[0.6rem]' : 'mb-3 text-sm'}`}>To</h3>
-          <div className={`${isForPdf ? 'space-y-0 leading-tight' : 'space-y-1'} text-gray-900`}>
-            <p className="font-medium">{state.toName || 'Client Company Name'}</p>
-            <p className="break-all">{state.toEmail || 'client.email@example.com'}</p>
-            <p>{state.toAddress1 || '456 Client Ave, City, State, Zip'}</p>
-            {state.toAddress2 && <p>{state.toAddress2}</p>}
-            {state.toFax && <p>Fax: {state.toFax}</p>}
-          </div>
-        </div>
-      </div>
+      <div className={`grid grid-cols-1 md:grid-cols-2 gap-x-8 min-w-0 ${isForPdf ? 'mb-1' : 'mb-10'} ${baseText}`}>
+  <div className="min-w-0">
+    <h3 className={`${sectionTitleText} font-semibold uppercase tracking-wider text-gray-600 ${isForPdf ? 'mb-0.5 text-[0.6rem]' : 'mb-3 text-sm'}`}>From</h3>
+    <div className={`${isForPdf ? 'space-y-0 leading-tight' : 'space-y-1'} text-gray-900`}>
+      <p className="font-medium">{state.fromName || 'Your Company Name'}</p>
+      <p className="break-all whitespace-pre-line">{state.fromEmail || 'your.email@example.com'}</p>
+      <p>{state.fromAddress1 || '123 Main St, City, State, Zip'}</p>
+      {state.fromAddress2 && <p>{state.fromAddress2}</p>}
+      {state.showAdditionalFromDetails && state.fromBusinessNumber && (
+        <p>Business #: {state.fromBusinessNumber}</p>
+      )}
+    </div>
+  </div>
+  <div className="min-w-0">
+    <h3 className={`${sectionTitleText} font-semibold uppercase tracking-wider text-gray-600 ${isForPdf ? 'mb-0.5 text-[0.6rem]' : 'mb-3 text-sm'}`}>To</h3>
+    <div className={`${isForPdf ? 'space-y-0 leading-tight' : 'space-y-1'} text-gray-900`}>
+      <p className="font-medium">{state.toName || 'Client Company Name'}</p>
+      <p className="break-all whitespace-pre-line">{state.toEmail || 'client.email@example.com'}</p>
+      <p>{state.toAddress1 || '456 Client Ave, City, State, Zip'}</p>
+      {state.toAddress2 && <p>{state.toAddress2}</p>}
+      {state.toFax && <p>Fax: {state.toFax}</p>}
+    </div>
+  </div>
+</div>
           <div className="mb-10">
             <table className="w-full">
               <thead>
