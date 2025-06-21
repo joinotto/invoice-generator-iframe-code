@@ -958,19 +958,38 @@
               );
             };
 
-            // --- RENDER THE APP ---
-            const embedRootElement = document.getElementById('invoice-generator-embed-root');
-            if (embedRootElement) {
-              const root = ReactDOM.createRoot(embedRootElement);
-              root.render(
-                <StrictMode>
-                  <App />
-                </StrictMode>
-              );
-            } else {
-              console.error("Embed root element 'invoice-generator-embed-root' not found.");
-            }
-        </script>
-    </div>
+         
+<!-- ✅ React App Mounting Script -->
+<script type="text/babel">
+  const embedRootElement = document.getElementById('invoice-generator-embed-root');
+  if (embedRootElement) {
+    const root = ReactDOM.createRoot(embedRootElement);
+    root.render(
+      <StrictMode>
+        <App />
+      </StrictMode>
+    );
+  } else {
+    console.error("Embed root element 'invoice-generator-embed-root' not found.");
+  }
+</script>
+
+<!-- ✅ Iframe Height PostMessage Script -->
+<script>
+  function postHeightToParent() {
+    const height = document.body.scrollHeight;
+    window.parent.postMessage(
+      { type: 'invoice-generator-height', height },
+      '*'
+    );
+  }
+
+  window.addEventListener('load', postHeightToParent);
+  window.addEventListener('resize', postHeightToParent);
+
+  const observer = new MutationObserver(postHeightToParent);
+  observer.observe(document.body, { childList: true, subtree: true });
+</script>
+
 </body>
 </html>
