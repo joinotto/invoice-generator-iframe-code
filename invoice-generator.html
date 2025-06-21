@@ -301,9 +301,7 @@
       </button>
     );
 
-    // --- InvoicePreview Component (trimmed for brevity; include all fields as needed) ---
-   const InvoicePreview = ({ state, isForPdf = false }) => {
-  // Define the missing variables here:
+ const InvoicePreview = ({ state, isForPdf = false }) => {
   const baseText = isForPdf ? 'text-xs' : 'text-base';
   const sectionTitleText = isForPdf ? 'text-xs' : 'text-lg';
 
@@ -313,99 +311,127 @@
 
   return (
     <div className="bg-white p-8 md:p-10 lg:p-12">
-      <div className="flex justify-between items-start mb-8">
-        <h1 className="text-5xl md:text-6xl font-bold text-gray-900">Invoice</h1>
-        {state.logoUrl && (
-          <img src={state.logoUrl} alt="Company Logo" className="max-h-20 object-contain" />
-        )}
-      </div>
-      {/* From / To grid, single grid block */}
-      <div className={`grid grid-cols-1 md:grid-cols-2 gap-x-8 min-w-0 ${isForPdf ? 'mb-1' : 'mb-10'} ${baseText}`}>
-  <div className="min-w-0">
-    <h3 className={`${sectionTitleText} font-semibold uppercase tracking-wider text-gray-600 ${isForPdf ? 'mb-0.5 text-[0.6rem]' : 'mb-3 text-sm'}`}>From</h3>
-    <div className={`${isForPdf ? 'space-y-0 leading-tight' : 'space-y-1'} text-gray-900`}>
-      <p className="font-medium">{state.fromName || 'Your Company Name'}</p>
-      <p className="break-all whitespace-pre-line">{state.fromEmail || 'your.email@example.com'}</p>
-      <p>{state.fromAddress1 || '123 Main St, City, State, Zip'}</p>
-      {state.fromAddress2 && <p>{state.fromAddress2}</p>}
-      {state.showAdditionalFromDetails && state.fromBusinessNumber && (
-        <p>Business #: {state.fromBusinessNumber}</p>
-      )}
-    </div>
-  </div>
-  <div className="min-w-0">
-    <h3 className={`${sectionTitleText} font-semibold uppercase tracking-wider text-gray-600 ${isForPdf ? 'mb-0.5 text-[0.6rem]' : 'mb-3 text-sm'}`}>To</h3>
-    <div className={`${isForPdf ? 'space-y-0 leading-tight' : 'space-y-1'} text-gray-900`}>
-      <p className="font-medium">{state.toName || 'Client Company Name'}</p>
-      <p className="break-all whitespace-pre-line">{state.toEmail || 'client.email@example.com'}</p>
-      <p>{state.toAddress1 || '456 Client Ave, City, State, Zip'}</p>
-      {state.toAddress2 && <p>{state.toAddress2}</p>}
-      {state.toFax && <p>Fax: {state.toFax}</p>}
-    </div>
-  </div>
-</div>
-          <div className="mb-10">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b-2 border-gray-200">
-                  <th className="text-left py-0.5 pr-2 text-xs font-semibold uppercase tracking-wider text-gray-600">Item</th>
-                  <th className="text-center py-0.5 px-1 text-xs font-semibold uppercase tracking-wider text-gray-600">Qty</th>
-                  <th className="text-right py-0.5 px-1 text-xs font-semibold uppercase tracking-wider text-gray-600">Price</th>
-                  <th className="text-right py-0.5 pl-1 text-xs font-semibold uppercase tracking-wider text-gray-600">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {state.items.map((item) => (
-                  <tr key={item.id} className="border-b border-gray-100 last:border-b-0 text-base">
-                    <td className="py-0.5 pr-2 text-gray-900">{item.description || 'Service or Product Description'}</td>
-                    <td className="py-0.5 px-1 text-center text-gray-900">{item.quantity}</td>
-                    <td className="py-0.5 px-1 text-right text-gray-900">{formatCurrency(Number(item.rate), state.selectedCurrency)}</td>
-                    <td className="py-0.5 pl-1 text-right font-medium text-gray-900">{formatCurrency((Number(item.rate) || 0) * (Number(item.quantity) || 0), state.selectedCurrency)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="flex justify-end mb-10">
-            <div className="w-full sm:w-64 space-y-0.5 text-base">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Subtotal</span>
-                <span className="text-gray-900 font-medium">{formatCurrency(subtotal, state.selectedCurrency)}</span>
-              </div>
-              <div className="flex justify-between text-lg font-bold border-t border-gray-200 pt-0.5 mt-0.5">
-                <span className="text-gray-900">Total</span>
-                <span className="text-gray-900">{formatCurrency(total, state.selectedCurrency)}</span>
-              </div>
-              <div className="flex justify-between text-2xl font-bold text-indigo-600">
-                <span>Amount Due</span>
-                <span>{formatCurrency(balanceDue, state.selectedCurrency)}</span>
-              </div>
-            </div>
-          </div>
-          {state.memo && (
-            <div className="mb-10">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-2">Notes</h4>
-              <p className="text-base text-gray-900 whitespace-pre-wrap">{state.memo}</p>
-            </div>
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+        <div className="flex items-start gap-4">
+          <h1 className="text-5xl md:text-6xl font-bold text-gray-900">Invoice</h1>
+          {state.logoUrl && (
+            <img src={state.logoUrl} alt="Company Logo" className="max-h-20 object-contain ml-4" />
           )}
-          {state.signature && (
-            <div className="mt-12">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-3">Signature</h4>
-              {(state.signature.startsWith('data:image') || state.signature.startsWith('blob:')) ? (
-                <img src={state.signature} alt="Signature Preview" className="max-h-20 border-b-2 border-gray-300 pb-1 object-contain" />
-              ) : (
-                <p className="font-serif text-3xl border-b-2 border-gray-300 pb-1 inline-block break-all text-gray-900">
-                  {state.signature}
-                </p>
-              )}
-            </div>
-          )}
-          <div className="text-center mt-12 pt-4 border-t border-gray-200">
-            <p className="text-xs text-gray-500">Powered by <span className="font-medium text-indigo-600">Otto</span></p>
+        </div>
+        <div className="space-y-1 md:text-right">
+          <div className="text-base text-gray-600">
+            <span className="font-semibold text-gray-700">Invoice #</span> {state.invoiceNumber || '—'}
+          </div>
+          <div className="text-base text-gray-600">
+            <span className="font-semibold text-gray-700">Date</span> {formatDate(state.invoiceDate)}
+          </div>
+          <div className="text-base text-gray-600">
+            <span className="font-semibold text-gray-700">Due Date</span> {formatDate(state.dueDate)}
           </div>
         </div>
-      );
-    };
+      </div>
+
+      {/* From / To grid */}
+      <div className={`grid grid-cols-1 md:grid-cols-2 gap-x-8 min-w-0 ${isForPdf ? 'mb-1' : 'mb-10'} ${baseText}`}>
+        {/* ...FROM... */}
+        <div className="min-w-0">
+          <h3 className={`${sectionTitleText} font-semibold uppercase tracking-wider text-gray-600 ${isForPdf ? 'mb-0.5 text-[0.6rem]' : 'mb-3 text-sm'}`}>From</h3>
+          <div className={`${isForPdf ? 'space-y-0 leading-tight' : 'space-y-1'} text-gray-900`}>
+            <p className="font-medium">{state.fromName || 'Your Company Name'}</p>
+            <p className="break-all whitespace-pre-line">{state.fromEmail || 'your.email@example.com'}</p>
+            <p>{state.fromAddress1 || '123 Main St, City, State, Zip'}</p>
+            {state.fromAddress2 && <p>{state.fromAddress2}</p>}
+            {state.showAdditionalFromDetails && state.fromBusinessNumber && (
+              <p>Business #: {state.fromBusinessNumber}</p>
+            )}
+          </div>
+        </div>
+        {/* ...TO... */}
+        <div className="min-w-0 mt-6 md:mt-0">
+          <h3 className={`${sectionTitleText} font-semibold uppercase tracking-wider text-gray-600 ${isForPdf ? 'mb-0.5 text-[0.6rem]' : 'mb-3 text-sm'}`}>To</h3>
+          <div className={`${isForPdf ? 'space-y-0 leading-tight' : 'space-y-1'} text-gray-900`}>
+            <p className="font-medium">{state.toName || 'Client Company Name'}</p>
+            <p className="break-all whitespace-pre-line">{state.toEmail || 'client.email@example.com'}</p>
+            <p>{state.toAddress1 || '456 Client Ave, City, State, Zip'}</p>
+            {state.toAddress2 && <p>{state.toAddress2}</p>}
+            {state.toFax && <p>Fax: {state.toFax}</p>}
+          </div>
+        </div>
+      </div>
+
+      {/* Items Table */}
+      <div className="mb-10">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b-2 border-gray-200">
+              <th className="text-left py-0.5 pr-2 text-xs font-semibold uppercase tracking-wider text-gray-600">Item</th>
+              <th className="text-center py-0.5 px-1 text-xs font-semibold uppercase tracking-wider text-gray-600">Qty</th>
+              <th className="text-right py-0.5 px-1 text-xs font-semibold uppercase tracking-wider text-gray-600">Price</th>
+              <th className="text-right py-0.5 pl-1 text-xs font-semibold uppercase tracking-wider text-gray-600">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {state.items.map((item) => (
+              <tr key={item.id} className="border-b border-gray-100 last:border-b-0 text-base">
+                <td className="py-0.5 pr-2 text-gray-900">{item.description || 'Service or Product Description'}</td>
+                <td className="py-0.5 px-1 text-center text-gray-900">{item.quantity}</td>
+                <td className="py-0.5 px-1 text-right text-gray-900">{formatCurrency(Number(item.rate), state.selectedCurrency)}</td>
+                <td className="py-0.5 pl-1 text-right font-medium text-gray-900">{formatCurrency((Number(item.rate) || 0) * (Number(item.quantity) || 0), state.selectedCurrency)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Totals */}
+      <div className="flex justify-end mb-10">
+        <div className="w-full sm:w-64 space-y-0.5 text-base">
+          <div className="flex justify-between">
+            <span className="text-gray-600">Subtotal</span>
+            <span className="text-gray-900 font-medium">{formatCurrency(subtotal, state.selectedCurrency)}</span>
+          </div>
+          <div className="flex justify-between text-lg font-bold border-t border-gray-200 pt-0.5 mt-0.5">
+            <span className="text-gray-900">Total</span>
+            <span className="text-gray-900">{formatCurrency(total, state.selectedCurrency)}</span>
+          </div>
+          <div className="flex justify-between text-2xl font-bold text-indigo-600">
+            <span>Amount Due</span>
+            <span>{formatCurrency(balanceDue, state.selectedCurrency)}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Notes */}
+      {state.memo && (
+        <div className="mb-10">
+          <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-2">Notes</h4>
+          <p className="text-base text-gray-900 whitespace-pre-wrap">{state.memo}</p>
+        </div>
+      )}
+
+      {/* Signature */}
+      {state.signature && (
+        <div className="mt-12">
+          <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-3">Signature</h4>
+          {(state.signature.startsWith('data:image') || state.signature.startsWith('blob:')) ? (
+            <img src={state.signature} alt="Signature Preview" className="max-h-20 border-b-2 border-gray-300 pb-1 object-contain" />
+          ) : (
+            <p className="font-serif text-3xl border-b-2 border-gray-300 pb-1 inline-block break-all text-gray-900">
+              {state.signature}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Footer */}
+      <div className="text-center mt-12 pt-4 border-t border-gray-200">
+        <p className="text-xs text-gray-500">Powered by <span className="font-medium text-indigo-600">Otto</span></p>
+      </div>
+    </div>
+  );
+};
+
 
     // --- Main App Component ---
     const App = () => {
