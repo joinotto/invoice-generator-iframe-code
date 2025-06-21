@@ -11,7 +11,6 @@
   <!-- App dependencies -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/html2pdf.js@0.10.3/dist/html2pdf.bundle.js"></script>
-  <script src="https://unpkg.com/date-fns@3.6.0/index.js"></script>
   <style>
     body {
       margin: 0;
@@ -54,6 +53,7 @@
 
   <!-- React App Script: All JS/JSX, nothing else inside this block -->
   <script type="text/babel">
+    // --- IMPORTS/HOOKS ---
     const { useState, useRef, useCallback, StrictMode } = React;
 
     // --- Utility: Generate unique item IDs ---
@@ -63,168 +63,17 @@
     const INITIAL_ITEM = { id: generateItemId(), description: '', rate: 0, quantity: 1 };
 
     // --- Currency list (shortened for brevity; add more as you need) ---
-     const CURRENCIES = [
-              { code: 'USD', name: 'United States Dollar' },
-  { code: 'EUR', name: 'Euro' },
-  { code: 'JPY', name: 'Japanese Yen' },
-  { code: 'GBP', name: 'British Pound Sterling' },
-  { code: 'AUD', name: 'Australian Dollar' },
-  { code: 'CAD', name: 'Canadian Dollar' },
-  { code: 'CHF', name: 'Swiss Franc' },
-  { code: 'CNY', name: 'Chinese Yuan' },
-  { code: 'HKD', name: 'Hong Kong Dollar' },
-  { code: 'NZD', name: 'New Zealand Dollar' },
-  { code: 'SEK', name: 'Swedish Krona' },
-  { code: 'KRW', name: 'South Korean Won' },
-  { code: 'SGD', name: 'Singapore Dollar' },
-  { code: 'NOK', name: 'Norwegian Krone' },
-  { code: 'MXN', name: 'Mexican Peso' },
-  { code: 'INR', name: 'Indian Rupee' },
-  { code: 'RUB', name: 'Russian Ruble' },
-  { code: 'ZAR', name: 'South African Rand' },
-  { code: 'BRL', name: 'Brazilian Real' },
-  { code: 'TRY', name: 'Turkish Lira' },
-  { code: 'AED', name: 'United Arab Emirates Dirham' },
-  { code: 'AFN', name: 'Afghan Afghani' },
-  { code: 'ALL', name: 'Albanian Lek' },
-  { code: 'AMD', name: 'Armenian Dram' },
-  { code: 'ANG', name: 'Netherlands Antillean Guilder' },
-  { code: 'AOA', name: 'Angolan Kwanza' },
-  { code: 'ARS', name: 'Argentine Peso' },
-  { code: 'AWG', name: 'Aruban Florin' },
-  { code: 'AZN', name: 'Azerbaijani Manat' },
-  { code: 'BAM', name: 'Bosnia-Herzegovina Convertible Mark' },
-  { code: 'BBD', name: 'Barbadian Dollar' },
-  { code: 'BDT', name: 'Bangladeshi Taka' },
-  { code: 'BGN', name: 'Bulgarian Lev' },
-  { code: 'BHD', name: 'Bahraini Dinar' },
-  { code: 'BIF', name: 'Burundian Franc' },
-  { code: 'BMD', name: 'Bermudan Dollar' },
-  { code: 'BND', name: 'Brunei Dollar' },
-  { code: 'BOB', name: 'Bolivian Boliviano' },
-  { code: 'BSD', name: 'Bahamian Dollar' },
-  { code: 'BTN', name: 'Bhutanese Ngultrum' },
-  { code: 'BWP', name: 'Botswanan Pula' },
-  { code: 'BYN', name: 'Belarusian Ruble' },
-  { code: 'BZD', name: 'Belize Dollar' },
-  { code: 'CDF', name: 'Congolese Franc' },
-  { code: 'CLP', name: 'Chilean Peso' },
-  { code: 'COP', name: 'Colombian Peso' },
-  { code: 'CRC', name: 'Costa Rican Colón' },
-  { code: 'CUP', name: 'Cuban Peso' },
-  { code: 'CVE', name: 'Cape Verdean Escudo' },
-  { code: 'CZK', name: 'Czech Koruna' },
-  { code: 'DJF', name: 'Djiboutian Franc' },
-  { code: 'DKK', name: 'Danish Krone' },
-  { code: 'DOP', name: 'Dominican Peso' },
-  { code: 'DZD', name: 'Algerian Dinar' },
-  { code: 'EGP', name: 'Egyptian Pound' },
-  { code: 'ERN', name: 'Eritrean Nakfa' },
-  { code: 'ETB', name: 'Ethiopian Birr' },
-  { code: 'FJD', name: 'Fijian Dollar' },
-  { code: 'FKP', name: 'Falkland Islands Pound' },
-  { code: 'FOK', name: 'Faroese Króna' },
-  { code: 'GEL', name: 'Georgian Lari' },
-  { code: 'GGP', name: 'Guernsey Pound' },
-  { code: 'GHS', name: 'Ghanaian Cedi' },
-  { code: 'GIP', name: 'Gibraltar Pound' },
-  { code: 'GMD', name: 'Gambian Dalasi' },
-  { code: 'GNF', name: 'Guinean Franc' },
-  { code: 'GTQ', name: 'Guatemalan Quetzal' },
-  { code: 'GYD', name: 'Guyanaese Dollar' },
-  { code: 'HNL', name: 'Honduran Lempira' },
-  { code: 'HRK', name: 'Croatian Kuna' },
-  { code: 'HTG', name: 'Haitian Gourde' },
-  { code: 'HUF', name: 'Hungarian Forint' },
-  { code: 'IDR', name: 'Indonesian Rupiah' },
-  { code: 'ILS', name: 'Israeli New Shekel' },
-  { code: 'IMP', name: 'Manx pound' },
-  { code: 'IQD', name: 'Iraqi Dinar' },
-  { code: 'IRR', name: 'Iranian Rial' },
-  { code: 'ISK', name: 'Icelandic Króna' },
-  { code: 'JEP', name: 'Jersey Pound' },
-  { code: 'JMD', name: 'Jamaican Dollar' },
-  { code: 'JOD', name: 'Jordanian Dinar' },
-  { code: 'KES', name: 'Kenyan Shilling' },
-  { code: 'KGS', name: 'Kyrgystani Som' },
-  { code: 'KHR', name: 'Cambodian Riel' },
-  { code: 'KID', name: 'Kiribati Dollar' },
-  { code: 'KMF', name: 'Comorian Franc' },
-  { code: 'KWD', name: 'Kuwaiti Dinar' },
-  { code: 'KYD', name: 'Cayman Islands Dollar' },
-  { code: 'KZT', name: 'Kazakhstani Tenge' },
-  { code: 'LAK', name: 'Laotian Kip' },
-  { code: 'LBP', name: 'Lebanese Pound' },
-  { code: 'LKR', name: 'Sri Lankan Rupee' },
-  { code: 'LRD', name: 'Liberian Dollar' },
-  { code: 'LSL', name: 'Lesotho Loti' },
-  { code: 'LYD', name: 'Libyan Dinar' },
-  { code: 'MAD', name: 'Moroccan Dirham' },
-  { code: 'MDL', name: 'Moldovan Leu' },
-  { code: 'MGA', name: 'Malagasy Ariary' },
-  { code: 'MKD', name: 'Macedonian Denar' },
-  { code: 'MMK', name: 'Myanmar Kyat' },
-  { code: 'MNT', name: 'Mongolian Tugrik' },
-  { code: 'MOP', name: 'Macanese Pataca' },
-  { code: 'MRU', name: 'Mauritanian Ouguiya' },
-  { code: 'MUR', name: 'Mauritian Rupee' },
-  { code: 'MVR', name: 'Maldivian Rufiyaa' },
-  { code: 'MWK', name: 'Malawian Kwacha' },
-  { code: 'MYR', name: 'Malaysian Ringgit' },
-  { code: 'MZN', name: 'Mozambican Metical' },
-  { code: 'NAD', name: 'Namibian Dollar' },
-  { code: 'NGN', name: 'Nigerian Naira' },
-  { code: 'NIO', name: 'Nicaraguan Córdoba' },
-  { code: 'NPR', name: 'Nepalese Rupee' },
-  { code: 'OMR', name: 'Omani Rial' },
-  { code: 'PAB', name: 'Panamanian Balboa' },
-  { code: 'PEN', name: 'Peruvian Sol' },
-  { code: 'PGK', name: 'Papua New Guinean Kina' },
-  { code: 'PHP', name: 'Philippine Peso' },
-  { code: 'PKR', name: 'Pakistani Rupee' },
-  { code: 'PLN', name: 'Polish Zloty' },
-  { code: 'PYG', name: 'Paraguayan Guarani' },
-  { code: 'QAR', name: 'Qatari Rial' },
-  { code: 'RON', name: 'Romanian Leu' },
-  { code: 'RSD', name: 'Serbian Dinar' },
-  { code: 'RWF', name: 'Rwandan Franc' },
-  { code: 'SAR', name: 'Saudi Riyal' },
-  { code: 'SBD', name: 'Solomon Islands Dollar' },
-  { code: 'SCR', name: 'Seychellois Rupee' },
-  { code: 'SDG', name: 'Sudanese Pound' },
-  { code: 'SHP', name: 'Saint Helena Pound' },
-  { code: 'SLE', name: 'Sierra Leonean Leone' },
-  { code: 'SOS', name: 'Somali Shilling' },
-  { code: 'SRD', name: 'Surinamese Dollar' },
-  { code: 'SSP', name: 'South Sudanese Pound' },
-  { code: 'STN', name: 'São Tomé and Príncipe Dobra' },
-  { code: 'SYP', name: 'Syrian Pound' },
-  { code: 'SZL', name: 'Swazi Lilangeni' },
-  { code: 'THB', name: 'Thai Baht' },
-  { code: 'TJS', name: 'Tajikistani Somoni' },
-  { code: 'TMT', name: 'Turkmenistani Manat' },
-  { code: 'TND', name: 'Tunisian Dinar' },
-  { code: 'TOP', name: 'Tongan Paʻanga' },
-  { code: 'TTD', name: 'Trinidad and Tobago Dollar' },
-  { code: 'TVD', name: 'Tuvaluan Dollar' },
-  { code: 'TWD', name: 'New Taiwan Dollar' },
-  { code: 'TZS', name: 'Tanzanian Shilling' },
-  { code: 'UAH', name: 'Ukrainian Hryvnia' },
-  { code: 'UGX', name: 'Ugandan Shilling' },
-  { code: 'UYU', name: 'Uruguayan Peso' },
-  { code: 'UZS', name: 'Uzbekistani Som' },
-  { code: 'VES', name: 'Venezuelan Bolívar Soberano' },
-  { code: 'VND', name: 'Vietnamese Dong' },
-  { code: 'VUV', name: 'Vanuatu Vatu' },
-  { code: 'WST', name: 'Samoan Tala' },
-  { code: 'XAF', name: 'Central African CFA Franc' },
-  { code: 'XCD', name: 'East Caribbean Dollar' },
-  { code: 'XDR', name: 'Special Drawing Rights' },
-  { code: 'XOF', name: 'West African CFA Franc' },
-  { code: 'XPF', name: 'CFP Franc' },
-  { code: 'YER', name: 'Yemeni Rial' },
-  { code: 'ZMW', name: 'Zambian Kwacha' },
-  { code: 'ZWL', name: 'Zimbabwean Dollar' },
+    const CURRENCIES = [
+      { code: 'USD', name: 'United States Dollar' },
+      { code: 'EUR', name: 'Euro' },
+      { code: 'JPY', name: 'Japanese Yen' },
+      { code: 'GBP', name: 'British Pound Sterling' },
+      { code: 'AUD', name: 'Australian Dollar' },
+      { code: 'CAD', name: 'Canadian Dollar' },
+      { code: 'CHF', name: 'Swiss Franc' },
+      { code: 'CNY', name: 'Chinese Yuan' },
+      { code: 'INR', name: 'Indian Rupee' },
+      // ... You can add more currencies if needed
     ];
 
     // --- Style helpers ---
@@ -301,160 +150,142 @@
       </button>
     );
 
- const InvoicePreview = ({ state, isForPdf = false }) => {
-  const baseText = isForPdf ? 'text-xs' : 'text-base';
-  const sectionTitleText = isForPdf ? 'text-xs' : 'text-lg';
+    // --- InvoicePreview ---
+    const InvoicePreview = ({ state, isForPdf = false }) => {
+      const baseText = isForPdf ? 'text-xs' : 'text-base';
+      const sectionTitleText = isForPdf ? 'text-xs' : 'text-lg';
 
-  const subtotal = state.items.reduce((acc, item) => acc + (Number(item.rate) || 0) * (Number(item.quantity) || 0), 0);
-  const total = subtotal;
-  const balanceDue = total;
+      const subtotal = state.items.reduce((acc, item) => acc + (Number(item.rate) || 0) * (Number(item.quantity) || 0), 0);
+      const total = subtotal;
+      const balanceDue = total;
 
-  return (
-<div className="bg-white p-8 md:p-10 lg:p-12">
-  {/* Header Row */}
-  <div className="flex flex-row items-start justify-between mb-8 gap-4">
-    {/* LEFT: Title and Details */}
-    <div>
-      <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-2">Invoice</h1>
-      <div className="space-y-1 mt-2">
-        <div className="text-base text-gray-700 flex gap-2">
-          <span className="font-semibold min-w-[96px]">Invoice #</span>
-          <span>{state.invoiceNumber || '—'}</span>
-        </div>
-        <div className="text-base text-gray-700 flex gap-2">
-          <span className="font-semibold min-w-[96px]">Date</span>
-          <span>{formatDate(state.invoiceDate)}</span>
-        </div>
-        <div className="text-base text-gray-700 flex gap-2">
-          <span className="font-semibold min-w-[96px]">Due Date</span>
-          <span>{formatDate(state.dueDate)}</span>
-        </div>
-      </div>
-    </div>
-    {/* RIGHT: Logo */}
-    {state.logoUrl && (
-      <div className="flex-shrink-0 flex items-center h-20">
-        <img
-          src={state.logoUrl}
-          alt="Company Logo"
-          className="max-h-20 object-contain"
-          style={{ maxWidth: '180px' }}
-        />
-      </div>
-    )}
-  </div>
-
-      {/* From / To grid */}
-      <div className={`grid grid-cols-1 md:grid-cols-2 gap-x-8 min-w-0 ${isForPdf ? 'mb-1' : 'mb-10'} ${baseText}`}>
-        {/* ...FROM... */}
-        <div className="min-w-0">
-          <h3 className={`${sectionTitleText} font-semibold uppercase tracking-wider text-gray-600 ${isForPdf ? 'mb-0.5 text-[0.6rem]' : 'mb-3 text-sm'}`}>From</h3>
-          <div className={`${isForPdf ? 'space-y-0 leading-tight' : 'space-y-1'} text-gray-900`}>
-            <p className="font-medium">{state.fromName || 'Your Company Name'}</p>
-            <p className="break-all whitespace-pre-line">{state.fromEmail || 'your.email@example.com'}</p>
-            <p>{state.fromAddress1 || '123 Main St, City, State, Zip'}</p>
-            {state.fromAddress2 && <p>{state.fromAddress2}</p>}
-            {state.showAdditionalFromDetails && state.fromBusinessNumber && (
-              <p>Business #: {state.fromBusinessNumber}</p>
+      return (
+        <div className="bg-white p-8 md:p-10 lg:p-12">
+          <div className="flex flex-row items-start justify-between mb-8 gap-4">
+            <div>
+              <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-2">Invoice</h1>
+              <div className="space-y-1 mt-2">
+                <div className="text-base text-gray-700 flex gap-2">
+                  <span className="font-semibold min-w-[96px]">Invoice #</span>
+                  <span>{state.invoiceNumber || '—'}</span>
+                </div>
+                <div className="text-base text-gray-700 flex gap-2">
+                  <span className="font-semibold min-w-[96px]">Date</span>
+                  <span>{formatDate(state.invoiceDate)}</span>
+                </div>
+                <div className="text-base text-gray-700 flex gap-2">
+                  <span className="font-semibold min-w-[96px]">Due Date</span>
+                  <span>{formatDate(state.dueDate)}</span>
+                </div>
+              </div>
+            </div>
+            {state.logoUrl && (
+              <div className="flex-shrink-0 flex items-center h-20">
+                <img
+                  src={state.logoUrl}
+                  alt="Company Logo"
+                  className="max-h-20 object-contain"
+                  style={{ maxWidth: '180px' }}
+                />
+              </div>
             )}
           </div>
-        </div>
-        {/* ...TO... */}
-        <div className="min-w-0 mt-6 md:mt-0">
-          <h3 className={`${sectionTitleText} font-semibold uppercase tracking-wider text-gray-600 ${isForPdf ? 'mb-0.5 text-[0.6rem]' : 'mb-3 text-sm'}`}>To</h3>
-          <div className={`${isForPdf ? 'space-y-0 leading-tight' : 'space-y-1'} text-gray-900`}>
-            <p className="font-medium">{state.toName || 'Client Company Name'}</p>
-            <p className="break-all whitespace-pre-line">{state.toEmail || 'client.email@example.com'}</p>
-            <p>{state.toAddress1 || '456 Client Ave, City, State, Zip'}</p>
-            {state.toAddress2 && <p>{state.toAddress2}</p>}
-            {state.toFax && <p>Fax: {state.toFax}</p>}
+
+          <div className={`grid grid-cols-1 md:grid-cols-2 gap-x-8 min-w-0 ${isForPdf ? 'mb-1' : 'mb-10'} ${baseText}`}>
+            <div className="min-w-0">
+              <h3 className={`${sectionTitleText} font-semibold uppercase tracking-wider text-gray-600 ${isForPdf ? 'mb-0.5 text-[0.6rem]' : 'mb-3 text-sm'}`}>From</h3>
+              <div className={`${isForPdf ? 'space-y-0 leading-tight' : 'space-y-1'} text-gray-900`}>
+                <p className="font-medium">{state.fromName || 'Your Company Name'}</p>
+                <p className="break-all whitespace-pre-line">{state.fromEmail || 'your.email@example.com'}</p>
+                <p>{state.fromAddress1 || '123 Main St, City, State, Zip'}</p>
+                {state.fromAddress2 && <p>{state.fromAddress2}</p>}
+                {state.showAdditionalFromDetails && state.fromBusinessNumber && (
+                  <p>Business #: {state.fromBusinessNumber}</p>
+                )}
+              </div>
+            </div>
+            <div className="min-w-0 mt-6 md:mt-0">
+              <h3 className={`${sectionTitleText} font-semibold uppercase tracking-wider text-gray-600 ${isForPdf ? 'mb-0.5 text-[0.6rem]' : 'mb-3 text-sm'}`}>To</h3>
+              <div className={`${isForPdf ? 'space-y-0 leading-tight' : 'space-y-1'} text-gray-900`}>
+                <p className="font-medium">{state.toName || 'Client Company Name'}</p>
+                <p className="break-all whitespace-pre-line">{state.toEmail || 'client.email@example.com'}</p>
+                <p>{state.toAddress1 || '456 Client Ave, City, State, Zip'}</p>
+                {state.toAddress2 && <p>{state.toAddress2}</p>}
+                {state.toFax && <p>Fax: {state.toFax}</p>}
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-10">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b-2 border-gray-200">
+                  <th className="text-left py-0.5 pr-2 text-xs font-semibold uppercase tracking-wider text-gray-600">Item</th>
+                  <th className="text-center py-0.5 px-1 text-xs font-semibold uppercase tracking-wider text-gray-600">Qty</th>
+                  <th className="text-right py-0.5 px-1 text-xs font-semibold uppercase tracking-wider text-gray-600">Price</th>
+                  <th className="text-right py-0.5 pl-1 text-xs font-semibold uppercase tracking-wider text-gray-600">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {state.items.map((item) => (
+                  <tr key={item.id} className="border-b border-gray-100 last:border-b-0 text-base">
+                    <td className="py-0.5 pr-2 text-gray-900">{item.description || 'Service or Product Description'}</td>
+                    <td className="py-0.5 px-1 text-center text-gray-900">{item.quantity}</td>
+                    <td className="py-0.5 px-1 text-right text-gray-900">{formatCurrency(Number(item.rate), state.selectedCurrency)}</td>
+                    <td className="py-0.5 pl-1 text-right font-medium text-gray-900">{formatCurrency((Number(item.rate) || 0) * (Number(item.quantity) || 0), state.selectedCurrency)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="flex justify-end mb-10">
+            <div className="w-full sm:w-64 space-y-0.5 text-base">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Subtotal</span>
+                <span className="text-gray-900 font-medium">{formatCurrency(subtotal, state.selectedCurrency)}</span>
+              </div>
+              <div className="flex justify-between text-lg font-bold border-t border-gray-200 pt-0.5 mt-0.5">
+                <span className="text-gray-900">Total</span>
+                <span className="text-gray-900">{formatCurrency(total, state.selectedCurrency)}</span>
+              </div>
+              <div className="flex justify-between text-2xl font-bold text-indigo-600">
+                <span>Amount Due</span>
+                <span>{formatCurrency(balanceDue, state.selectedCurrency)}</span>
+              </div>
+            </div>
+          </div>
+
+          {state.memo && (
+            <div className="mb-10">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-2">Notes</h4>
+              <p className="text-base text-gray-900 whitespace-pre-wrap">{state.memo}</p>
+            </div>
+          )}
+
+          <div style={{ breakInside: 'avoid', pageBreakInside: 'avoid', WebkitBreakInside: 'avoid', MozBreakInside: 'avoid' }}>
+            {state.signature && (
+              <div className="mt-6">
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-2">Signature</h4>
+                {(state.signature.startsWith('data:image') || state.signature.startsWith('blob:')) ? (
+                  <img src={state.signature} alt="Signature Preview" className="max-h-20 border-b-2 border-gray-300 pb-1 object-contain" />
+                ) : (
+                  <p className="font-serif text-3xl border-b-2 border-gray-300 pb-1 inline-block break-all text-gray-900">
+                    {state.signature}
+                  </p>
+                )}
+              </div>
+            )}
+
+            <div className="text-center mt-4 pt-2 border-t border-gray-200">
+              <p className="text-xs text-gray-500">
+                Powered by <span className="font-medium text-indigo-600">Otto</span>
+              </p>
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* Items Table */}
-      <div className="mb-10">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b-2 border-gray-200">
-              <th className="text-left py-0.5 pr-2 text-xs font-semibold uppercase tracking-wider text-gray-600">Item</th>
-              <th className="text-center py-0.5 px-1 text-xs font-semibold uppercase tracking-wider text-gray-600">Qty</th>
-              <th className="text-right py-0.5 px-1 text-xs font-semibold uppercase tracking-wider text-gray-600">Price</th>
-              <th className="text-right py-0.5 pl-1 text-xs font-semibold uppercase tracking-wider text-gray-600">Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            {state.items.map((item) => (
-              <tr key={item.id} className="border-b border-gray-100 last:border-b-0 text-base">
-                <td className="py-0.5 pr-2 text-gray-900">{item.description || 'Service or Product Description'}</td>
-                <td className="py-0.5 px-1 text-center text-gray-900">{item.quantity}</td>
-                <td className="py-0.5 px-1 text-right text-gray-900">{formatCurrency(Number(item.rate), state.selectedCurrency)}</td>
-                <td className="py-0.5 pl-1 text-right font-medium text-gray-900">{formatCurrency((Number(item.rate) || 0) * (Number(item.quantity) || 0), state.selectedCurrency)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Totals */}
-      <div className="flex justify-end mb-10">
-        <div className="w-full sm:w-64 space-y-0.5 text-base">
-          <div className="flex justify-between">
-            <span className="text-gray-600">Subtotal</span>
-            <span className="text-gray-900 font-medium">{formatCurrency(subtotal, state.selectedCurrency)}</span>
-          </div>
-          <div className="flex justify-between text-lg font-bold border-t border-gray-200 pt-0.5 mt-0.5">
-            <span className="text-gray-900">Total</span>
-            <span className="text-gray-900">{formatCurrency(total, state.selectedCurrency)}</span>
-          </div>
-          <div className="flex justify-between text-2xl font-bold text-indigo-600">
-            <span>Amount Due</span>
-            <span>{formatCurrency(balanceDue, state.selectedCurrency)}</span>
-          </div>
-        </div>
-      </div>
-
-       {/* Notes */}
-  {state.memo && (
-    <div className="mb-10">
-      <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-2">Notes</h4>
-      <p className="text-base text-gray-900 whitespace-pre-wrap">{state.memo}</p>
-    </div>
-  )}
-
-  {/* --- Signature & Footer: keep together on PDF --- */}
-  <div
-    style={{
-      breakInside: 'avoid',
-      pageBreakInside: 'avoid',
-      WebkitBreakInside: 'avoid',
-      MozBreakInside: 'avoid',
-    }}
-  >
-    {/* Signature */}
-    {state.signature && (
-      <div className="mt-6">
-        <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-2">Signature</h4>
-        {(state.signature.startsWith('data:image') || state.signature.startsWith('blob:')) ? (
-          <img src={state.signature} alt="Signature Preview" className="max-h-20 border-b-2 border-gray-300 pb-1 object-contain" />
-        ) : (
-          <p className="font-serif text-3xl border-b-2 border-gray-300 pb-1 inline-block break-all text-gray-900">
-            {state.signature}
-          </p>
-        )}
-      </div>
-    )}
-
-    {/* Footer */}
-    <div className="text-center mt-4 pt-2 border-t border-gray-200">
-      <p className="text-xs text-gray-500">
-        Powered by <span className="font-medium text-indigo-600">Otto</span>
-      </p>
-    </div>
-  </div>
-</div>
-);
-
+      );
+    };
 
     // --- Main App Component ---
     const App = () => {
@@ -477,7 +308,7 @@
         memo: '',
         signature: null,
         selectedCurrency: 'USD',
-        showAdditionalFromDetails: false, 
+        showAdditionalFromDetails: false,
         activeTab: 'invoice',
         errors: {},
         isGeneratingPdf: false,
@@ -539,7 +370,7 @@
                 setState(prevState => ({ ...prevState, items: [{ ...INITIAL_ITEM, id: generateItemId() }] }));
                 return;
             } else {
-                return; 
+                return;
             }
         }
         const newItems = state.items.filter((_, i) => i !== indexToRemove);
@@ -549,7 +380,7 @@
       const validateForm = useCallback((formState) => {
         const errors = {};
         REQUIRED_FIELDS_CONFIG.forEach(fieldInfo => {
-          const value = formState[fieldInfo.key]; 
+          const value = formState[fieldInfo.key];
           if (!value?.toString().trim()) {
             errors[fieldInfo.key] = `${fieldInfo.label} is required.`;
           }
@@ -563,7 +394,7 @@
         }
         return errors;
       }, []);
-      
+
       const handleDownloadPdf = async () => {
         const validationErrors = validateForm(state);
         if (Object.keys(validationErrors).length > 0) {
@@ -576,7 +407,7 @@
 
         setTimeout(async () => {
             try {
-                const html2pdf = window.html2pdf; 
+                const html2pdf = window.html2pdf;
                 const element = mainPreviewRef.current;
                 if (!html2pdf) throw new Error("PDF generation library (html2pdf.js) is not available.");
                 if (!element) throw new Error("Preview content is not ready for PDF generation.");
@@ -595,17 +426,17 @@
                         unit: 'in',
                         format: 'letter',
                         orientation: 'portrait',
-                        compress: true, 
+                        compress: true,
                     }
                 };
-                window.scrollTo(0, 0); 
+                window.scrollTo(0, 0);
                 await html2pdf().set(opt).from(element).save();
             } catch (error) {
                 alert(`Could not generate PDF. Error: ${error instanceof Error ? error.message : String(error)}`);
             } finally {
                 setState(prev => ({ ...prev, isGeneratingPdf: false }));
             }
-        }, 800); 
+        }, 800);
       };
 
       const subtotal = state.items.reduce((acc, item) => acc + (Number(item.rate) || 0) * (Number(item.quantity) || 0), 0);
@@ -613,23 +444,23 @@
       const balanceDue = total;
 
       const renderField = (fieldName, label, placeholder, type = 'text', extraInputProps = {}) => (
-  <div key={fieldName}>
-    <label htmlFor={fieldName} className={LABEL_BASE_CLASS}>{label}</label>
-    <input
-      type={type}
-      id={fieldName}
-      name={fieldName}
-      value={state[fieldName] || ''}
-      onChange={handleInputChange}
-      placeholder={placeholder}
-      className={INPUT_BASE_CLASS}
-      aria-required={REQUIRED_FIELDS_CONFIG.some(f => f.key === fieldName)}
-      {...extraInputProps}
-    />
-    {state.errors[fieldName] && <p className="text-red-500 text-xs mt-1" role="alert">{state.errors[fieldName]}</p>}
-  </div>
-);
-      
+        <div key={fieldName}>
+          <label htmlFor={fieldName} className={LABEL_BASE_CLASS}>{label}</label>
+          <input
+            type={type}
+            id={fieldName}
+            name={fieldName}
+            value={state[fieldName] || ''}
+            onChange={handleInputChange}
+            placeholder={placeholder}
+            className={INPUT_BASE_CLASS}
+            aria-required={REQUIRED_FIELDS_CONFIG.some(f => f.key === fieldName)}
+            {...extraInputProps}
+          />
+          {state.errors[fieldName] && <p className="text-red-500 text-xs mt-1" role="alert">{state.errors[fieldName]}</p>}
+        </div>
+      );
+
       const fromFields = [
         { name: 'fromName', label: 'Name *', placeholder: 'Your Company Name' },
         { name: 'fromEmail', label: 'Email *', placeholder: 'your.email@example.com', type: 'email' },
@@ -663,7 +494,7 @@
                 </div>
                 <nav className="flex space-x-1" aria-label="Main navigation">
                   {([
-                    {key: 'invoice', label: 'Invoice Editor'}, 
+                    {key: 'invoice', label: 'Invoice Editor'},
                     {key: 'preview', label: 'Live Preview'}
                   ]).map(tab => (
                     <button
@@ -698,9 +529,8 @@
                       <div className="space-y-4">
                         <h2 id="invoice-details-heading" className="text-lg font-semibold text-gray-800 mb-0">Invoice Details</h2>
                         {renderField('invoiceNumber', 'Invoice Number', 'INV0001')}
-       {renderField('invoiceDate', 'Invoice Date', '', 'date', { onFocus: e => e.target.showPicker && e.target.showPicker() })}
-{renderField('dueDate', 'Due Date', '', 'date', { onFocus: e => e.target.showPicker && e.target.showPicker() })}
-
+                        {renderField('invoiceDate', 'Invoice Date', '', 'date', { onFocus: e => e.target.showPicker && e.target.showPicker() })}
+                        {renderField('dueDate', 'Due Date', '', 'date', { onFocus: e => e.target.showPicker && e.target.showPicker() })}
                       </div>
                       <div className="space-y-4">
                         <h3 className="text-lg font-semibold text-gray-800">Company Logo</h3>
@@ -721,7 +551,7 @@
                       </div>
                     </div>
                   </section>
-                  
+
                   <section className="bg-white rounded-lg shadow-md p-6" aria-labelledby="billing-details-heading">
                     <h2 id="billing-details-heading" className="sr-only">Billing Details</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
@@ -766,7 +596,7 @@
                                         </td>
                                         <td className="py-2 pl-2 text-right align-middle">
                                             {(state.items.length > 1 || (item.description === '' && Number(item.rate) === 0 && Number(item.quantity) === 1)) && (
-                                              <IconButton onClick={() => removeItem(index)} ariaLabel={`Remove item ${index + 1}`} 
+                                              <IconButton onClick={() => removeItem(index)} ariaLabel={`Remove item ${index + 1}`}
                                                 disabled={state.items.length <=1 && !(item.description === '' && Number(item.rate) === 0 && Number(item.quantity) === 1) }>
                                                 ✕
                                               </IconButton>
@@ -876,7 +706,7 @@
       );
     };
 
-     // --- Mount React App ---
+    // --- Mount React App ---
     const embedRootElement = document.getElementById('invoice-generator-embed-root');
     if (embedRootElement) {
       const root = ReactDOM.createRoot(embedRootElement);
@@ -888,7 +718,10 @@
     } else {
       console.error("Embed root element 'invoice-generator-embed-root' not found.");
     }
-  </script> <!-- END of your React/Babel script -->
+    // Do not add any code or curly braces after this!
+
+  </script>
+  <!-- END of your React/Babel script -->
 
   <!-- Begin iframe-resize script: -->
   <script>
@@ -921,9 +754,8 @@
       }
 
       window.addEventListener('resize', postHeight);
-       // --- ADD THESE TWO LINES ---
-    window.addEventListener('orientationchange', postHeight);
-    document.addEventListener('visibilitychange', postHeight);
+      window.addEventListener('orientationchange', postHeight);
+      document.addEventListener('visibilitychange', postHeight);
 
       window.addEventListener('message', function(event) {
         if (event.data === 'REQUEST_INVOICE_HEIGHT') {
