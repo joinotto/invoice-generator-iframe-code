@@ -593,7 +593,7 @@
       ];
 
       return (
-        <div className="min-h-screen bg-gray-100">
+        <div className={state.activeTab === "invoice" ? "min-h-screen bg-gray-100" : "bg-gray-100"}>
           {state.isGeneratingPdf && (
             <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50" role="dialog" aria-modal="true" aria-labelledby="loading-message">
               <div className="bg-white p-6 rounded-lg shadow-xl text-center flex items-center space-x-3">
