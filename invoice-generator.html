@@ -974,21 +974,35 @@
   }
 </script>
 
-<!-- ✅ Iframe Height PostMessage Script -->
+<!-- ✅ Iframe Height Auto-Resize Script (separate script block) -->
 <script>
-  function postHeightToParent() {
-    const height = document.body.scrollHeight;
+(function() {
+  function postHeight() {
+    var container = document.getElementById('invoice-generator-embed-container');
+    if (!container) return;
+    var height = container.offsetHeight;
     window.parent.postMessage(
-      { type: 'invoice-generator-height', height },
+      { type: 'INVOICE_IFRAME_HEIGHT', height: height },
       '*'
     );
   }
 
-  window.addEventListener('load', postHeightToParent);
-  window.addEventListener('resize', postHeightToParent);
+  document.addEventListener('DOMContentLoaded', postHeight);
 
-  const observer = new MutationObserver(postHeightToParent);
-  observer.observe(document.body, { childList: true, subtree: true });
+  var container = document.getElementById('invoice-generator-embed-container');
+  if (container && window.ResizeObserver) {
+    var ro = new ResizeObserver(postHeight);
+    ro.observe(container);
+  }
+
+  window.addEventListener('resize', postHeight);
+
+  window.addEventListener('message', function(event) {
+    if (event.data === 'REQUEST_INVOICE_HEIGHT') {
+      postHeight();
+    }
+  });
+})();
 </script>
 
 </body>
