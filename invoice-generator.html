@@ -310,27 +310,39 @@
   const balanceDue = total;
 
   return (
-    <div className="bg-white p-8 md:p-10 lg:p-12">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
-        <div className="flex items-start gap-4">
-          <h1 className="text-5xl md:text-6xl font-bold text-gray-900">Invoice</h1>
-          {state.logoUrl && (
-            <img src={state.logoUrl} alt="Company Logo" className="max-h-20 object-contain ml-4" />
-          )}
+<div className="bg-white p-8 md:p-10 lg:p-12">
+  {/* Header Row */}
+  <div className="flex flex-row items-start justify-between mb-8 gap-4">
+    {/* LEFT: Title and Details */}
+    <div>
+      <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-2">Invoice</h1>
+      <div className="space-y-1 mt-2">
+        <div className="text-base text-gray-700 flex gap-2">
+          <span className="font-semibold min-w-[96px]">Invoice #</span>
+          <span>{state.invoiceNumber || '—'}</span>
         </div>
-        <div className="space-y-1 md:text-right">
-          <div className="text-base text-gray-600">
-            <span className="font-semibold text-gray-700">Invoice #</span> {state.invoiceNumber || '—'}
-          </div>
-          <div className="text-base text-gray-600">
-            <span className="font-semibold text-gray-700">Date</span> {formatDate(state.invoiceDate)}
-          </div>
-          <div className="text-base text-gray-600">
-            <span className="font-semibold text-gray-700">Due Date</span> {formatDate(state.dueDate)}
-          </div>
+        <div className="text-base text-gray-700 flex gap-2">
+          <span className="font-semibold min-w-[96px]">Date</span>
+          <span>{formatDate(state.invoiceDate)}</span>
+        </div>
+        <div className="text-base text-gray-700 flex gap-2">
+          <span className="font-semibold min-w-[96px]">Due Date</span>
+          <span>{formatDate(state.dueDate)}</span>
         </div>
       </div>
+    </div>
+    {/* RIGHT: Logo */}
+    {state.logoUrl && (
+      <div className="flex-shrink-0 flex items-center h-20">
+        <img
+          src={state.logoUrl}
+          alt="Company Logo"
+          className="max-h-20 object-contain"
+          style={{ maxWidth: '180px' }}
+        />
+      </div>
+    )}
+  </div>
 
       {/* From / To grid */}
       <div className={`grid grid-cols-1 md:grid-cols-2 gap-x-8 min-w-0 ${isForPdf ? 'mb-1' : 'mb-10'} ${baseText}`}>
