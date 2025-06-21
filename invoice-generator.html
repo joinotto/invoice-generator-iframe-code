@@ -847,6 +847,12 @@
       );
     };
 
+    <script>
+window.onerror = function(msg,src,lineno,colno,err){
+  document.body.innerHTML = '<pre style="color:red;">'+msg+'\n'+(err&&err.stack?err.stack:'')+'</pre>';
+};
+</script>
+
      // --- Mount React App ---
     const embedRootElement = document.getElementById('invoice-generator-embed-root');
     if (embedRootElement) {
