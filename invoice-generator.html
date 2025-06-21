@@ -402,36 +402,46 @@
         </div>
       </div>
 
-      {/* Notes */}
-      {state.memo && (
-        <div className="mb-10">
-          <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-2">Notes</h4>
-          <p className="text-base text-gray-900 whitespace-pre-wrap">{state.memo}</p>
-        </div>
-      )}
-
-      {/* Signature */}
-      {state.signature && (
-        <div className="mt-12">
-          <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-3">Signature</h4>
-          {(state.signature.startsWith('data:image') || state.signature.startsWith('blob:')) ? (
-            <img src={state.signature} alt="Signature Preview" className="max-h-20 border-b-2 border-gray-300 pb-1 object-contain" />
-          ) : (
-            <p className="font-serif text-3xl border-b-2 border-gray-300 pb-1 inline-block break-all text-gray-900">
-              {state.signature}
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* Footer */}
-      <div className="text-center mt-6 pt-2 border-t border-gray-200">
-
-        <p className="text-xs text-gray-500">Powered by <span className="font-medium text-indigo-600">Otto</span></p>
-      </div>
+       {/* Notes */}
+  {state.memo && (
+    <div className="mb-10">
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-2">Notes</h4>
+      <p className="text-base text-gray-900 whitespace-pre-wrap">{state.memo}</p>
     </div>
-  );
-};
+  )}
+
+  {/* --- Signature & Footer: keep together on PDF --- */}
+  <div
+    style={{
+      breakInside: 'avoid',
+      pageBreakInside: 'avoid',
+      WebkitBreakInside: 'avoid',
+      MozBreakInside: 'avoid',
+    }}
+  >
+    {/* Signature */}
+    {state.signature && (
+      <div className="mt-6">
+        <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-2">Signature</h4>
+        {(state.signature.startsWith('data:image') || state.signature.startsWith('blob:')) ? (
+          <img src={state.signature} alt="Signature Preview" className="max-h-20 border-b-2 border-gray-300 pb-1 object-contain" />
+        ) : (
+          <p className="font-serif text-3xl border-b-2 border-gray-300 pb-1 inline-block break-all text-gray-900">
+            {state.signature}
+          </p>
+        )}
+      </div>
+    )}
+
+    {/* Footer */}
+    <div className="text-center mt-4 pt-2 border-t border-gray-200">
+      <p className="text-xs text-gray-500">
+        Powered by <span className="font-medium text-indigo-600">Otto</span>
+      </p>
+    </div>
+  </div>
+</div>
+);
 
 
     // --- Main App Component ---
