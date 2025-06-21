@@ -671,7 +671,7 @@
       );
     };
 
-    // --- Mount React App ---
+     // --- Mount React App ---
     const embedRootElement = document.getElementById('invoice-generator-embed-root');
     if (embedRootElement) {
       const root = ReactDOM.createRoot(embedRootElement);
@@ -683,27 +683,40 @@
     } else {
       console.error("Embed root element 'invoice-generator-embed-root' not found.");
     }
-  </script>
+  </script> <!-- END of your React/Babel script -->
 
-  <!-- Iframe Height Auto-Resize Script -->
+  <!-- Begin iframe-resize script: -->
   <script>
     (function() {
-      function postHeight() {
-        var container = document.getElementById('invoice-generator-embed-container');
-        if (!container) return;
-        var height = container.offsetHeight;
-        window.parent.postMessage(
-          { type: 'INVOICE_IFRAME_HEIGHT', height: height },
-          '*'
-        );
+      // Remove body padding if inside an iframe (prevents double padding/extra space)
+      if (window.self !== window.top) {
+        document.body.style.padding = '0';
       }
+
+      let debounce;
+      function postHeight() {
+        clearTimeout(debounce);
+        debounce = setTimeout(() => {
+          var container = document.getElementById('invoice-generator-embed-container');
+          if (!container) return;
+          var height = container.scrollHeight;
+          window.parent.postMessage(
+            { type: 'INVOICE_IFRAME_HEIGHT', height: height },
+            '*'
+          );
+        }, 80);
+      }
+
       document.addEventListener('DOMContentLoaded', postHeight);
+
       var container = document.getElementById('invoice-generator-embed-container');
       if (container && window.ResizeObserver) {
         var ro = new ResizeObserver(postHeight);
         ro.observe(container);
       }
+
       window.addEventListener('resize', postHeight);
+
       window.addEventListener('message', function(event) {
         if (event.data === 'REQUEST_INVOICE_HEIGHT') {
           postHeight();
