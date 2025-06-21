@@ -1,1009 +1,715 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice Generator - Preview</title>
-    <!-- Core dependencies for the embeddable component -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- App dependencies -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/html2pdf.js@0.10.3/dist/html2pdf.bundle.js"></script>
-    <script src="https://unpkg.com/date-fns@3.6.0/index.js"></script> <!-- Included as per original setup -->
-    <style>
-        body {
-            margin: 0;
-            background-color: #f0f2f5; /* Neutral background for preview */
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            padding: 20px; 
-        }
-        /* Global scrollbar styles (from original index.html) */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #a8a8a8;
-        }
-    </style>
-<script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.1.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
-    "react/": "https://esm.sh/react@^19.1.0/"
-  }
-}
-</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice Generator - Preview</title>
+  <!-- Core dependencies for the embeddable component -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- App dependencies -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/html2pdf.js@0.10.3/dist/html2pdf.bundle.js"></script>
+  <script src="https://unpkg.com/date-fns@3.6.0/index.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background-color: #f0f2f5;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      padding: 20px;
+    }
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
+  </style>
 </head>
 <body>
-    <!-- Div for index.tsx to mount to, if it's being run by the environment -->
-    <div id="root"></div>
+  <div id="invoice-generator-embed-container" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f9fafb; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); overflow: hidden; margin: 0 auto; max-width: 1280px;">
+    <div id="invoice-generator-embed-root" style="min-height: 800px;"></div>
+    <style>
+      #invoice-generator-embed-container * { box-sizing: border-box; }
+      #invoice-generator-embed-container ::-webkit-scrollbar { width: 8px; height: 8px; }
+      #invoice-generator-embed-container ::-webkit-scrollbar-track { background: #f1f1f1; }
+      #invoice-generator-embed-container ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+      #invoice-generator-embed-container ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+      @keyframes invoice-embed-spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      .invoice-embed-spinner-animation { animation: invoice-embed-spin 1s linear infinite; }
+    </style>
+  </div>
 
-    <!-- Content from embeddable-invoice-generator.html starts here -->
-    <div id="invoice-generator-embed-container" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f9fafb; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); overflow: hidden; margin: 0 auto; max-width: 1280px;">
-        
-        <div id="invoice-generator-embed-root" style="min-height: 800px;"></div>
+  <!-- React App Script: All JS/JSX, nothing else inside this block -->
+  <script type="text/babel">
+    const { useState, useRef, useCallback, StrictMode } = React;
 
-        <style>
-            /* Styles specific to the embed container (from embeddable file) */
-            #invoice-generator-embed-container * {
-                box-sizing: border-box;
-            }
-            #invoice-generator-embed-container ::-webkit-scrollbar {
-                width: 8px;
-                height: 8px;
-            }
-            #invoice-generator-embed-container ::-webkit-scrollbar-track {
-                background: #f1f1f1;
-            }
-            #invoice-generator-embed-container ::-webkit-scrollbar-thumb {
-                background: #c1c1c1;
-                border-radius: 4px;
-            }
-            #invoice-generator-embed-container ::-webkit-scrollbar-thumb:hover {
-                background: #a8a8a8;
-            }
-            @keyframes invoice-embed-spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-            }
-            .invoice-embed-spinner-animation {
-                animation: invoice-embed-spin 1s linear infinite;
-            }
-        </style>
+    // --- Utility: Generate unique item IDs ---
+    const generateItemId = () => Date.now().toString(36) + Math.random().toString(36).substring(2, 7);
 
-        <script type="text/babel">
-            const { useState, useRef, useCallback, useEffect, StrictMode } = React;
+    // --- Invoice item initial structure ---
+    const INITIAL_ITEM = { id: generateItemId(), description: '', rate: 0, quantity: 1 };
 
-            // --- CONSTANTS ---
-            const generateItemId = () => Date.now().toString(36) + Math.random().toString(36).substring(2, 7);
+    // --- Currency list (shortened for brevity; add more as you need) ---
+    const CURRENCIES = [
+      { value: "USD", label: "USD - US Dollar" },
+      { value: "EUR", label: "EUR - Euro" },
+      { value: "GBP", label: "GBP - British Pound" },
+      { value: "JPY", label: "JPY - Japanese Yen" },
+      { value: "CAD", label: "CAD - Canadian Dollar" },
+      { value: "AUD", label: "AUD - Australian Dollar" },
+      { value: "CHF", label: "CHF - Swiss Franc" },
+      { value: "CNY", label: "CNY - Chinese Yuan" },
+      { value: "INR", label: "INR - Indian Rupee" },
+    ];
 
-            const INITIAL_ITEM = {
-              id: generateItemId(),
-              description: '',
-              rate: 0,
-              quantity: 1,
-            };
+    // --- Style helpers ---
+    const INPUT_BASE_CLASS = "block w-full px-3 py-2 text-sm text-gray-800 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500";
+    const LABEL_BASE_CLASS = "block text-xs font-medium text-gray-600 mb-1";
+    const REQUIRED_FIELDS_CONFIG = [
+      { key: 'fromName', label: 'From Name' },
+      { key: 'fromEmail', label: 'From Email' },
+      { key: 'fromAddress1', label: 'From Address' },
+      { key: 'toName', label: 'To Name' },
+      { key: 'toEmail', label: 'To Email' },
+      { key: 'toAddress1', label: 'To Address' },
+    ];
 
-            const CURRENCIES = [
-              { code: 'USD', name: 'United States Dollar' },
-  { code: 'EUR', name: 'Euro' },
-  { code: 'JPY', name: 'Japanese Yen' },
-  { code: 'GBP', name: 'British Pound Sterling' },
-  { code: 'AUD', name: 'Australian Dollar' },
-  { code: 'CAD', name: 'Canadian Dollar' },
-  { code: 'CHF', name: 'Swiss Franc' },
-  { code: 'CNY', name: 'Chinese Yuan' },
-  { code: 'HKD', name: 'Hong Kong Dollar' },
-  { code: 'NZD', name: 'New Zealand Dollar' },
-  { code: 'SEK', name: 'Swedish Krona' },
-  { code: 'KRW', name: 'South Korean Won' },
-  { code: 'SGD', name: 'Singapore Dollar' },
-  { code: 'NOK', name: 'Norwegian Krone' },
-  { code: 'MXN', name: 'Mexican Peso' },
-  { code: 'INR', name: 'Indian Rupee' },
-  { code: 'RUB', name: 'Russian Ruble' },
-  { code: 'ZAR', name: 'South African Rand' },
-  { code: 'BRL', name: 'Brazilian Real' },
-  { code: 'TRY', name: 'Turkish Lira' },
-  { code: 'AED', name: 'United Arab Emirates Dirham' },
-  { code: 'AFN', name: 'Afghan Afghani' },
-  { code: 'ALL', name: 'Albanian Lek' },
-  { code: 'AMD', name: 'Armenian Dram' },
-  { code: 'ANG', name: 'Netherlands Antillean Guilder' },
-  { code: 'AOA', name: 'Angolan Kwanza' },
-  { code: 'ARS', name: 'Argentine Peso' },
-  { code: 'AWG', name: 'Aruban Florin' },
-  { code: 'AZN', name: 'Azerbaijani Manat' },
-  { code: 'BAM', name: 'Bosnia-Herzegovina Convertible Mark' },
-  { code: 'BBD', name: 'Barbadian Dollar' },
-  { code: 'BDT', name: 'Bangladeshi Taka' },
-  { code: 'BGN', name: 'Bulgarian Lev' },
-  { code: 'BHD', name: 'Bahraini Dinar' },
-  { code: 'BIF', name: 'Burundian Franc' },
-  { code: 'BMD', name: 'Bermudan Dollar' },
-  { code: 'BND', name: 'Brunei Dollar' },
-  { code: 'BOB', name: 'Bolivian Boliviano' },
-  { code: 'BSD', name: 'Bahamian Dollar' },
-  { code: 'BTN', name: 'Bhutanese Ngultrum' },
-  { code: 'BWP', name: 'Botswanan Pula' },
-  { code: 'BYN', name: 'Belarusian Ruble' },
-  { code: 'BZD', name: 'Belize Dollar' },
-  { code: 'CDF', name: 'Congolese Franc' },
-  { code: 'CLP', name: 'Chilean Peso' },
-  { code: 'COP', name: 'Colombian Peso' },
-  { code: 'CRC', name: 'Costa Rican Colón' },
-  { code: 'CUP', name: 'Cuban Peso' },
-  { code: 'CVE', name: 'Cape Verdean Escudo' },
-  { code: 'CZK', name: 'Czech Koruna' },
-  { code: 'DJF', name: 'Djiboutian Franc' },
-  { code: 'DKK', name: 'Danish Krone' },
-  { code: 'DOP', name: 'Dominican Peso' },
-  { code: 'DZD', name: 'Algerian Dinar' },
-  { code: 'EGP', name: 'Egyptian Pound' },
-  { code: 'ERN', name: 'Eritrean Nakfa' },
-  { code: 'ETB', name: 'Ethiopian Birr' },
-  { code: 'FJD', name: 'Fijian Dollar' },
-  { code: 'FKP', name: 'Falkland Islands Pound' },
-  { code: 'FOK', name: 'Faroese Króna' },
-  { code: 'GEL', name: 'Georgian Lari' },
-  { code: 'GGP', name: 'Guernsey Pound' },
-  { code: 'GHS', name: 'Ghanaian Cedi' },
-  { code: 'GIP', name: 'Gibraltar Pound' },
-  { code: 'GMD', name: 'Gambian Dalasi' },
-  { code: 'GNF', name: 'Guinean Franc' },
-  { code: 'GTQ', name: 'Guatemalan Quetzal' },
-  { code: 'GYD', name: 'Guyanaese Dollar' },
-  { code: 'HNL', name: 'Honduran Lempira' },
-  { code: 'HRK', name: 'Croatian Kuna' },
-  { code: 'HTG', name: 'Haitian Gourde' },
-  { code: 'HUF', name: 'Hungarian Forint' },
-  { code: 'IDR', name: 'Indonesian Rupiah' },
-  { code: 'ILS', name: 'Israeli New Shekel' },
-  { code: 'IMP', name: 'Manx pound' },
-  { code: 'IQD', name: 'Iraqi Dinar' },
-  { code: 'IRR', name: 'Iranian Rial' },
-  { code: 'ISK', name: 'Icelandic Króna' },
-  { code: 'JEP', name: 'Jersey Pound' },
-  { code: 'JMD', name: 'Jamaican Dollar' },
-  { code: 'JOD', name: 'Jordanian Dinar' },
-  { code: 'KES', name: 'Kenyan Shilling' },
-  { code: 'KGS', name: 'Kyrgystani Som' },
-  { code: 'KHR', name: 'Cambodian Riel' },
-  { code: 'KID', name: 'Kiribati Dollar' },
-  { code: 'KMF', name: 'Comorian Franc' },
-  { code: 'KWD', name: 'Kuwaiti Dinar' },
-  { code: 'KYD', name: 'Cayman Islands Dollar' },
-  { code: 'KZT', name: 'Kazakhstani Tenge' },
-  { code: 'LAK', name: 'Laotian Kip' },
-  { code: 'LBP', name: 'Lebanese Pound' },
-  { code: 'LKR', name: 'Sri Lankan Rupee' },
-  { code: 'LRD', name: 'Liberian Dollar' },
-  { code: 'LSL', name: 'Lesotho Loti' },
-  { code: 'LYD', name: 'Libyan Dinar' },
-  { code: 'MAD', name: 'Moroccan Dirham' },
-  { code: 'MDL', name: 'Moldovan Leu' },
-  { code: 'MGA', name: 'Malagasy Ariary' },
-  { code: 'MKD', name: 'Macedonian Denar' },
-  { code: 'MMK', name: 'Myanmar Kyat' },
-  { code: 'MNT', name: 'Mongolian Tugrik' },
-  { code: 'MOP', name: 'Macanese Pataca' },
-  { code: 'MRU', name: 'Mauritanian Ouguiya' },
-  { code: 'MUR', name: 'Mauritian Rupee' },
-  { code: 'MVR', name: 'Maldivian Rufiyaa' },
-  { code: 'MWK', name: 'Malawian Kwacha' },
-  { code: 'MYR', name: 'Malaysian Ringgit' },
-  { code: 'MZN', name: 'Mozambican Metical' },
-  { code: 'NAD', name: 'Namibian Dollar' },
-  { code: 'NGN', name: 'Nigerian Naira' },
-  { code: 'NIO', name: 'Nicaraguan Córdoba' },
-  { code: 'NPR', name: 'Nepalese Rupee' },
-  { code: 'OMR', name: 'Omani Rial' },
-  { code: 'PAB', name: 'Panamanian Balboa' },
-  { code: 'PEN', name: 'Peruvian Sol' },
-  { code: 'PGK', name: 'Papua New Guinean Kina' },
-  { code: 'PHP', name: 'Philippine Peso' },
-  { code: 'PKR', name: 'Pakistani Rupee' },
-  { code: 'PLN', name: 'Polish Zloty' },
-  { code: 'PYG', name: 'Paraguayan Guarani' },
-  { code: 'QAR', name: 'Qatari Rial' },
-  { code: 'RON', name: 'Romanian Leu' },
-  { code: 'RSD', name: 'Serbian Dinar' },
-  { code: 'RWF', name: 'Rwandan Franc' },
-  { code: 'SAR', name: 'Saudi Riyal' },
-  { code: 'SBD', name: 'Solomon Islands Dollar' },
-  { code: 'SCR', name: 'Seychellois Rupee' },
-  { code: 'SDG', name: 'Sudanese Pound' },
-  { code: 'SHP', name: 'Saint Helena Pound' },
-  { code: 'SLE', name: 'Sierra Leonean Leone' },
-  { code: 'SOS', name: 'Somali Shilling' },
-  { code: 'SRD', name: 'Surinamese Dollar' },
-  { code: 'SSP', name: 'South Sudanese Pound' },
-  { code: 'STN', name: 'São Tomé and Príncipe Dobra' },
-  { code: 'SYP', name: 'Syrian Pound' },
-  { code: 'SZL', name: 'Swazi Lilangeni' },
-  { code: 'THB', name: 'Thai Baht' },
-  { code: 'TJS', name: 'Tajikistani Somoni' },
-  { code: 'TMT', name: 'Turkmenistani Manat' },
-  { code: 'TND', name: 'Tunisian Dinar' },
-  { code: 'TOP', name: 'Tongan Paʻanga' },
-  { code: 'TTD', name: 'Trinidad and Tobago Dollar' },
-  { code: 'TVD', name: 'Tuvaluan Dollar' },
-  { code: 'TWD', name: 'New Taiwan Dollar' },
-  { code: 'TZS', name: 'Tanzanian Shilling' },
-  { code: 'UAH', name: 'Ukrainian Hryvnia' },
-  { code: 'UGX', name: 'Ugandan Shilling' },
-  { code: 'UYU', name: 'Uruguayan Peso' },
-  { code: 'UZS', name: 'Uzbekistani Som' },
-  { code: 'VES', name: 'Venezuelan Bolívar Soberano' },
-  { code: 'VND', name: 'Vietnamese Dong' },
-  { code: 'VUV', name: 'Vanuatu Vatu' },
-  { code: 'WST', name: 'Samoan Tala' },
-  { code: 'XAF', name: 'Central African CFA Franc' },
-  { code: 'XCD', name: 'East Caribbean Dollar' },
-  { code: 'XDR', name: 'Special Drawing Rights' },
-  { code: 'XOF', name: 'West African CFA Franc' },
-  { code: 'XPF', name: 'CFP Franc' },
-  { code: 'YER', name: 'Yemeni Rial' },
-  { code: 'ZMW', name: 'Zambian Kwacha' },
-  { code: 'ZWL', name: 'Zimbabwean Dollar' },
-            ];
+    // --- Dates ---
+    const todayConst = new Date();
+    const thirtyDaysFromNowConst = new Date();
+    thirtyDaysFromNowConst.setDate(todayConst.getDate() + 30);
+    const DEFAULT_INVOICE_DATE = todayConst.toISOString().split('T')[0];
+    const DEFAULT_DUE_DATE = thirtyDaysFromNowConst.toISOString().split('T')[0];
 
-            const INPUT_BASE_CLASS = "block w-full px-3 py-2 text-sm text-gray-800 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500";
-            const LABEL_BASE_CLASS = "block text-xs font-medium text-gray-600 mb-1";
+    // --- Currency formatting ---
+    const formatCurrency = (amount, currency = 'USD') => {
+      const symbols = {
+        'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥', 'CAD': 'C$',
+        'AUD': 'A$', 'CHF': 'CHF', 'CNY': '¥', 'INR': '₹'
+      };
+      const symbol = symbols[currency] || currency;
+      if (typeof amount !== 'number' || isNaN(amount)) return `${symbol}0.00`;
+      return `${symbol}${amount.toFixed(2)}`;
+    };
 
-            const REQUIRED_FIELDS_CONFIG = [
-              { key: 'fromName', label: 'From Name' },
-              { key: 'fromEmail', label: 'From Email' },
-              { key: 'fromAddress1', label: 'From Address' },
-              { key: 'toName', label: 'To Name' },
-              { key: 'toEmail', label: 'To Email' },
-              { key: 'toAddress1', label: 'To Address' },
-            ];
+    const formatDate = (dateString) => {
+      if (!dateString) return '';
+      try {
+        const dateParts = dateString.split('-');
+        if (dateParts.length === 3) {
+          const year = parseInt(dateParts[0], 10);
+          const month = parseInt(dateParts[1], 10) - 1;
+          const day = parseInt(dateParts[2], 10);
+          const date = new Date(Date.UTC(year, month, day));
+          if (isNaN(date.getTime())) return 'Invalid Date';
+          return date.toLocaleDateString('en-US', {
+            year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC',
+          });
+        }
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return 'Invalid Date';
+        return date.toLocaleDateString('en-US', {
+          year: 'numeric', month: 'long', day: 'numeric',
+        });
+      } catch (error) { return 'Invalid Date'; }
+    };
 
-            const todayConst = new Date();
-            const thirtyDaysFromNowConst = new Date();
-            thirtyDaysFromNowConst.setDate(todayConst.getDate() + 30);
-
-            const DEFAULT_INVOICE_DATE = todayConst.toISOString().split('T')[0];
-            const DEFAULT_DUE_DATE = thirtyDaysFromNowConst.toISOString().split('T')[0];
-
-            // --- UTILS ---
-            const formatCurrency = (amount, currency = 'USD') => {
-              const symbols = {
-                'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥', 'CAD': 'C$',
-                'AUD': 'A$', 'CHF': 'CHF', 'CNY': '¥', 'INR': '₹'
-              };
-              const symbol = symbols[currency] || currency;
-              
-              if (typeof amount !== 'number' || isNaN(amount)) {
-                console.warn(`Invalid amount provided to formatCurrency: ${amount}`);
-                return `${symbol}0.00`;
-              }
-              return `${symbol}${amount.toFixed(2)}`;
-            };
-
-            const formatDate = (dateString) => {
-              if (!dateString) return '';
-              try {
-                const dateParts = dateString.split('-');
-                if (dateParts.length === 3) {
-                  const year = parseInt(dateParts[0], 10);
-                  const month = parseInt(dateParts[1], 10) - 1;
-                  const day = parseInt(dateParts[2], 10);
-                  const date = new Date(Date.UTC(year, month, day));
-                  if (isNaN(date.getTime())) {
-                    console.warn(`Invalid date string parts after parsing: ${dateString}`);
-                    return 'Invalid Date';
-                  }
-                  return date.toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    timeZone: 'UTC',
-                  });
-                }
-                const date = new Date(dateString);
-                if (isNaN(date.getTime())) {
-                  console.warn(`Invalid date string provided: ${dateString}`);
-                  return 'Invalid Date';
-                }
-                return date.toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                });
-              } catch (error) {
-                console.warn(`Error formatting date string: ${dateString}`, error);
-                return 'Invalid Date';
-              }
-            };
-
-            // --- SPINNER COMPONENT ---
-            const Spinner = () => {
-              return (
-                <div
-                  className="invoice-embed-spinner-animation h-5 w-5 border-2 border-gray-300 border-t-indigo-600 rounded-full"
-                  role="status"
-                >
-                  <span className="sr-only">Loading...</span>
-                </div>
-              );
-            };
-
-            // --- ICONBUTTON COMPONENT ---
-            const IconButton = ({ onClick, children, className = '', ariaLabel, disabled = false }) => {
-              return (
-                <button
-                  type="button"
-                  onClick={onClick}
-                  aria-label={ariaLabel}
-                  disabled={disabled}
-                  className={`p-1 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1
-                              ${disabled 
-                                ? 'text-gray-300 cursor-not-allowed' 
-                                : 'text-gray-400 hover:text-red-500 focus:ring-red-400'} 
-                              ${className}`}
-                >
-                  {children}
-                </button>
-              );
-            };
-
-            // --- INVOICEPREVIEW COMPONENT ---
-            const InvoicePreview = ({ state, isForPdf = false }) => {
-              const subtotal = state.items.reduce((acc, item) => acc + (Number(item.rate) || 0) * (Number(item.quantity) || 0), 0);
-              const total = subtotal; 
-              const balanceDue = total;
-
-              const baseText = isForPdf ? 'text-xs' : 'text-base'; 
-              const smallText = isForPdf ? 'text-[0.6rem]' : 'text-xs'; 
-              const titleText = isForPdf ? 'text-3xl' : 'text-5xl md:text-6xl'; 
-              const sectionTitleText = isForPdf ? 'text-xs' : 'text-lg'; 
-              const largeAmountText = isForPdf ? 'text-sm' : 'text-2xl'; 
-              const signatureText = isForPdf ? 'text-2xl' : 'text-3xl'; 
-              const footerText = isForPdf ? 'text-[0.5rem]' : 'text-xs';
-
-              const containerStyles = isForPdf 
-                ? 'w-[7.5in] p-[0.125in] mx-auto'
-                : 'p-8 md:p-10 lg:p-12';
-
-              return (
-                <div className={`bg-white ${containerStyles}`}>
-                  {/* Header */}
-                  <div className={`flex justify-between items-start ${isForPdf ? 'mb-1' : 'mb-8'}`}>
-                    <h1 className={`${titleText} font-bold text-gray-900`}>Invoice</h1>
-                    {state.logoUrl && (
-                      <img
-                        src={state.logoUrl}
-                        alt="Company Logo"
-                        className={`${isForPdf ? 'max-h-12' : 'max-h-20'} object-contain`} 
-                      />
-                    )}
-                  </div>
-
-                  {/* Invoice Details */}
-                  <div className={`${isForPdf ? 'mb-1' : 'mb-8'} grid grid-cols-1 md:grid-cols-2 gap-4 ${baseText}`}>
-                    <div className="space-y-0.5">
-                      <div className="flex">
-                        <span className={`${isForPdf ? 'w-16' : 'w-32'} font-medium text-gray-600`}>Invoice #</span>
-                        <span className="text-gray-900">{state.invoiceNumber}</span>
-                      </div>
-                      <div className="flex">
-                        <span className={`${isForPdf ? 'w-16' : 'w-32'} font-medium text-gray-600`}>Date</span>
-                        <span className="text-gray-900">{formatDate(state.invoiceDate)}</span>
-                      </div>
-                      <div className="flex">
-                        <span className={`${isForPdf ? 'w-16' : 'w-32'} font-medium text-gray-600`}>Due Date</span>
-                        <span className="text-gray-900">{formatDate(state.dueDate)}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* From/To Parties */}
-                  <div className={`grid grid-cols-2 gap-x-8 ${isForPdf ? 'mb-1' : 'mb-10'} ${baseText}`}>
-                    <div>
-                      <h3 className={`${sectionTitleText} font-semibold uppercase tracking-wider text-gray-600 ${isForPdf ? 'mb-0.5 text-[0.6rem]' : 'mb-3 text-sm'}`}>
-                        From
-                      </h3>
-                      <div className={`${isForPdf ? 'space-y-0 leading-tight' : 'space-y-1'} text-gray-900`}>
-                        <p className="font-medium">{state.fromName || 'Your Company Name'}</p>
-                        <p>{state.fromEmail || 'your.email@example.com'}</p>
-                        <p>{state.fromAddress1 || '123 Main St, City, State, Zip'}</p>
-                        {state.fromAddress2 && <p>{state.fromAddress2}</p>}
-                        {state.showAdditionalFromDetails && state.fromBusinessNumber && (
-                          <p>Business #: {state.fromBusinessNumber}</p>
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <h3 className={`${sectionTitleText} font-semibold uppercase tracking-wider text-gray-600 ${isForPdf ? 'mb-0.5 text-[0.6rem]' : 'mb-3 text-sm'}`}>
-                        To
-                      </h3>
-                      <div className={`${isForPdf ? 'space-y-0 leading-tight' : 'space-y-1'} text-gray-900`}>
-                        <p className="font-medium">{state.toName || 'Client Company Name'}</p>
-                        <p>{state.toEmail || 'client.email@example.com'}</p>
-                        <p>{state.toAddress1 || '456 Client Ave, City, State, Zip'}</p>
-                        {state.toAddress2 && <p>{state.toAddress2}</p>}
-                        {state.toFax && <p>Fax: {state.toFax}</p>}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Items Table */}
-                  <div className={`${isForPdf ? 'mb-1' : 'mb-10'}`}>
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b-2 border-gray-200">
-                          <th className={`text-left py-0.5 pr-2 ${smallText} font-semibold uppercase tracking-wider text-gray-600`}>Item</th>
-                          <th className={`text-center py-0.5 px-1 ${smallText} font-semibold uppercase tracking-wider text-gray-600`}>Qty</th>
-                          <th className={`text-right py-0.5 px-1 ${smallText} font-semibold uppercase tracking-wider text-gray-600`}>Price</th>
-                          <th className={`text-right py-0.5 pl-1 ${smallText} font-semibold uppercase tracking-wider text-gray-600`}>Amount</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {state.items.map((item) => (
-                          <tr key={item.id} className={`border-b border-gray-100 last:border-b-0 ${baseText}`}>
-                            <td className="py-0.5 pr-2 text-gray-900">{item.description || 'Service or Product Description'}</td>
-                            <td className="py-0.5 px-1 text-center text-gray-900">{item.quantity}</td>
-                            <td className="py-0.5 px-1 text-right text-gray-900">{formatCurrency(Number(item.rate), state.selectedCurrency)}</td>
-                            <td className="py-0.5 pl-1 text-right font-medium text-gray-900">{formatCurrency((Number(item.rate) || 0) * (Number(item.quantity) || 0), state.selectedCurrency)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Totals */}
-                  <div className={`flex justify-end ${isForPdf ? 'mb-1' : 'mb-10'}`}>
-                    <div className={`${isForPdf ? 'w-48' : 'w-full sm:w-64'} space-y-0.5 ${baseText}`}>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Subtotal</span>
-                        <span className="text-gray-900 font-medium">{formatCurrency(subtotal, state.selectedCurrency)}</span>
-                      </div>
-                      <div className={`flex justify-between ${isForPdf ? baseText : 'text-lg'} font-bold border-t border-gray-200 pt-0.5 mt-0.5`}>
-                        <span className="text-gray-900">Total</span>
-                        <span className="text-gray-900">{formatCurrency(total, state.selectedCurrency)}</span>
-                      </div>
-                      <div className={`flex justify-between ${largeAmountText} font-bold text-indigo-600`}>
-                        <span>Amount Due</span>
-                        <span>{formatCurrency(balanceDue, state.selectedCurrency)}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Memo */}
-                  {state.memo && (
-                    <div className={isForPdf ? 'mb-0.5' : 'mb-10'}>
-                      <h4 className={`${smallText} font-semibold uppercase tracking-wider text-gray-600 ${isForPdf ? 'mb-0.5' : 'mb-2'}`}>
-                        Notes
-                      </h4>
-                      <p className={`${baseText} text-gray-900 whitespace-pre-wrap`}>{state.memo}</p>
-                    </div>
-                  )}
-
-                  {/* Signature */}
-                  {state.signature && (
-                    <div className={`${isForPdf ? 'mt-0.5' : 'mt-12'}`}>
-                      <h4 className={`${smallText} font-semibold uppercase tracking-wider text-gray-600 ${isForPdf ? 'mb-0.5' : 'mb-3'}`}>
-                        Signature
-                      </h4>
-                      {(state.signature.startsWith('data:image') || state.signature.startsWith('blob:')) ? (
-                        <img
-                          src={state.signature}
-                          alt="Signature Preview"
-                          className={`${isForPdf ? 'max-h-6' : 'max-h-20'} border-b-2 border-gray-300 pb-1 object-contain`}
-                        />
-                      ) : (
-                        <p className={`font-serif ${signatureText} border-b-2 border-gray-300 pb-1 inline-block break-all text-gray-900`}>
-                          {state.signature}
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Footer */}
-                  <div className={`text-center ${isForPdf ? 'mt-1 pt-1 border-t border-gray-200' : 'mt-12 pt-4 border-t border-gray-200'}`}>
-                    <p className={`${footerText} text-gray-500`}>
-                      Powered by <span className={`font-medium ${isForPdf ? 'text-indigo-700' : 'text-indigo-600'}`}>Otto</span>
-                    </p>
-                  </div>
-                </div>
-              );
-            };
-            
-            // --- APP COMPONENT ---
-            const App = () => {
-              const [state, setState] = useState({
-                invoiceNumber: 'INV0001',
-                invoiceDate: DEFAULT_INVOICE_DATE,
-                dueDate: DEFAULT_DUE_DATE,
-                logoUrl: null,
-                fromName: '',
-                fromEmail: '',
-                fromAddress1: '',
-                fromAddress2: '',
-                fromBusinessNumber: '',
-                toName: '',
-                toEmail: '',
-                toAddress1: '',
-                toAddress2: '',
-                toFax: '',
-                items: [{ ...INITIAL_ITEM, id: generateItemId() }],
-                memo: '',
-                signature: null,
-                selectedCurrency: 'USD',
-                showAdditionalFromDetails: false, 
-                activeTab: 'invoice',
-                errors: {},
-                isGeneratingPdf: false,
-                showSignatureTypeInput: false,
-                typedSignatureInput: '',
-              });
-
-              const logoInputRef = useRef(null);
-              const signatureUploadInputRef = useRef(null);
-              const mainPreviewRef = useRef(null);
-
-              const handleInputChange = useCallback((e) => {
-                const { name, value } = e.target;
-                setState(prevState => ({
-                  ...prevState,
-                  [name]: value,
-                  errors: { ...prevState.errors, [name]: undefined }
-                }));
-              }, []);
-
-              const handleFileUpload = useCallback((e, field) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  const reader = new FileReader();
-                  reader.onload = (event) => {
-                    setState(prevState => ({ ...prevState, [field]: event.target?.result }));
-                  };
-                  reader.readAsDataURL(file);
-                }
-                if(e.target) e.target.value = ''; // Reset file input
-              }, []);
-
-              const handleItemChange = useCallback((index, field, value) => {
-                const newItems = state.items.map((item, i) => {
-                  if (i === index) {
-                    let processedValue = value;
-                    if (field === 'rate' || field === 'quantity') {
-                      processedValue = parseFloat(value.toString()) || 0;
-                      if (field === 'quantity' && processedValue < 0) processedValue = 0;
-                    }
-                    return { ...item, [field]: processedValue };
-                  }
-                  return item;
-                });
-                setState(prevState => ({ ...prevState, items: newItems }));
-              }, [state.items]);
-
-              const addItem = useCallback(() => {
-                setState(prevState => ({
-                  ...prevState,
-                  items: [...prevState.items, { ...INITIAL_ITEM, id: generateItemId() }]
-                }));
-              }, []);
-
-              const removeItem = useCallback((indexToRemove) => {
-                if (state.items.length <= 1) {
-                    const item = state.items[0];
-                    // Allow resetting the single item if it's the placeholder/empty one
-                    if (item.description === '' && Number(item.rate) === 0 && Number(item.quantity) === 1) {
-                        setState(prevState => ({ ...prevState, items: [{ ...INITIAL_ITEM, id: generateItemId() }] }));
-                        return;
-                    } else {
-                        // If it's the only item and has content, don't remove, but also don't reset
-                        return; 
-                    }
-                }
-                const newItems = state.items.filter((_, i) => i !== indexToRemove);
-                setState(prevState => ({ ...prevState, items: newItems }));
-              }, [state.items]);
-
-
-              const validateForm = useCallback((formState) => {
-                const errors = {};
-                REQUIRED_FIELDS_CONFIG.forEach(fieldInfo => {
-                  const value = formState[fieldInfo.key]; 
-                  if (!value?.toString().trim()) {
-                    errors[fieldInfo.key] = `${fieldInfo.label} is required.`;
-                  }
-                });
-
-                if (formState.fromEmail && !/\S+@\S+\.\S+/.test(formState.fromEmail)) {
-                  errors.fromEmail = 'Invalid email format.';
-                }
-                if (formState.toEmail && !/\S+@\S+\.\S+/.test(formState.toEmail)) {
-                  errors.toEmail = 'Invalid email format.';
-                }
-                return errors;
-              }, []);
-              
-              const handleDownloadPdf = async () => {
-                const validationErrors = validateForm(state);
-                if (Object.keys(validationErrors).length > 0) {
-                    setState(prev => ({ ...prev, errors: validationErrors, activeTab: 'invoice' }));
-                    alert("Please fill in all required fields marked with * before downloading the PDF.");
-                    return;
-                }
-
-                setState(prev => ({ ...prev, activeTab: 'preview', isGeneratingPdf: true }));
-
-                setTimeout(async () => {
-                    try {
-                        const html2pdf = window.html2pdf; 
-                        const element = mainPreviewRef.current;
-                        
-                        if (!html2pdf) {
-                            console.error('html2pdf.js is not loaded.');
-                            throw new Error("PDF generation library (html2pdf.js) is not available.");
-                        }
-                        if (!element) {
-                            console.error('Preview element (mainPreviewRef.current) is not available.');
-                            throw new Error("Preview content is not ready for PDF generation.");
-                        }
-                        if (element.offsetWidth === 0 || element.offsetHeight === 0) {
-                            console.error('Preview element has zero dimensions.', element);
-                            throw new Error("Preview content has zero dimensions. PDF cannot be generated.");
-                        }
-
-                        const opt = {
-                            margin: [0.4, 0.4, 0.4, 0.4],
-                            filename: `${state.invoiceNumber || 'invoice'}.pdf`,
-                            image: { type: 'jpeg', quality: 0.98 },
-                            html2canvas: {
-                                scale: 2,
-                                useCORS: true,
-                                letterRendering: true,
-                                allowTaint: true,
-                            },
-                            jsPDF: {
-                                unit: 'in',
-                                format: 'letter',
-                                orientation: 'portrait',
-                                compress: true, 
-                            }
-                        };
-                        window.scrollTo(0, 0); 
-                        await html2pdf().set(opt).from(element).save();
-                    } catch (error) {
-                        console.error('PDF generation failed:', error);
-                        alert(`Could not generate PDF. Error: ${error instanceof Error ? error.message : String(error)}`);
-                    } finally {
-                        setState(prev => ({ ...prev, isGeneratingPdf: false }));
-                    }
-                }, 800); 
-              };
-
-              const subtotal = state.items.reduce((acc, item) => acc + (Number(item.rate) || 0) * (Number(item.quantity) || 0), 0);
-              const total = subtotal;
-              const balanceDue = total;
-
-              const renderField = (fieldName, label, placeholder, type = 'text') => (
-                <div key={fieldName}>
-                  <label htmlFor={fieldName} className={LABEL_BASE_CLASS}>{label}</label>
-                  <input
-                    type={type}
-                    id={fieldName}
-                    name={fieldName}
-                    value={state[fieldName] || ''}
-                    onChange={handleInputChange}
-                    placeholder={placeholder}
-                    className={INPUT_BASE_CLASS}
-                    aria-required={REQUIRED_FIELDS_CONFIG.some(f => f.key === fieldName)}
-                  />
-                  {state.errors[fieldName] && <p className="text-red-500 text-xs mt-1" role="alert">{state.errors[fieldName]}</p>}
-                </div>
-              );
-              
-              const fromFields = [
-                { name: 'fromName', label: 'Name *', placeholder: 'Your Company Name' },
-                { name: 'fromEmail', label: 'Email *', placeholder: 'your.email@example.com', type: 'email' },
-                { name: 'fromAddress1', label: 'Address Line 1 *', placeholder: '123 Main St' },
-                { name: 'fromAddress2', label: 'Address Line 2', placeholder: 'Suite, Apt, etc.' },
-              ];
-              const toFields = [
-                { name: 'toName', label: 'Name *', placeholder: 'Client Company Name' },
-                { name: 'toEmail', label: 'Email *', placeholder: 'client.email@example.com', type: 'email' },
-                { name: 'toAddress1', label: 'Address Line 1 *', placeholder: '456 Client Ave' },
-                { name: 'toAddress2', label: 'Address Line 2', placeholder: 'Suite, Apt, etc.' },
-                { name: 'toFax', label: 'Fax (Optional)', placeholder: '(123) 456-7890' },
-              ];
-
-              return (
-                <div className="min-h-screen bg-gray-100">
-                  {state.isGeneratingPdf && (
-                    <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50" role="dialog" aria-modal="true" aria-labelledby="loading-message">
-                      <div className="bg-white p-6 rounded-lg shadow-xl text-center flex items-center space-x-3">
-                        <Spinner />
-                        <p id="loading-message" className="text-sm font-medium text-gray-700">Generating PDF, please wait...</p>
-                      </div>
-                    </div>
-                  )}
-
-                  <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
-                    <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
-                      <div className="flex justify-between items-center py-4">
-                        <div className="flex items-center">
-                          <span className="text-2xl font-bold text-indigo-600">otto</span>
-                        </div>
-                        <nav className="flex space-x-1" aria-label="Main navigation">
-                          {([
-                            {key: 'invoice', label: 'Invoice Editor'}, 
-                            {key: 'preview', label: 'Live Preview'}
-                          ]).map(tab => (
-                            <button
-                              key={tab.key}
-                              type="button"
-                              role="tab"
-                              aria-selected={state.activeTab === tab.key}
-                              onClick={() => setState(s => ({ ...s, activeTab: tab.key }))}
-                              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                                state.activeTab === tab.key
-                                  ? 'bg-indigo-100 text-indigo-700'
-                                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                              }`}
-                            >
-                              {tab.label}
-                            </button>
-                          ))}
-                        </nav>
-                      </div>
-                    </div>
-                  </header>
-
-                  <main className="max-w-screen-xl mx-auto p-4 sm:p-6 lg:p-8">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-                      {state.activeTab === 'invoice' ? (
-                        <div className="lg:col-span-2 space-y-6" role="tabpanel" aria-labelledby="invoice-tab-button"> {/* Use a unique ID for the button if needed */}
-                          <input type="file" ref={logoInputRef} onChange={(e) => handleFileUpload(e, 'logoUrl')} accept="image/*" className="hidden" aria-label="Upload company logo" />
-                          <input type="file" ref={signatureUploadInputRef} onChange={(e) => handleFileUpload(e, 'signature')} accept="image/*" className="hidden" aria-label="Upload signature image"/>
-
-                          <section className="bg-white rounded-lg shadow-md p-6" aria-labelledby="invoice-details-heading">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                              <div className="space-y-4">
-                                <h2 id="invoice-details-heading" className="text-lg font-semibold text-gray-800 mb-0">Invoice Details</h2>
-                                {renderField('invoiceNumber', 'Invoice Number', 'INV0001')}
-                                {renderField('invoiceDate', 'Invoice Date', '', 'date')}
-                                {renderField('dueDate', 'Due Date', '', 'date')}
-                              </div>
-                              <div className="space-y-4">
-                                <h3 className="text-lg font-semibold text-gray-800">Company Logo</h3>
-                                  {state.logoUrl ? (
-                                    <div className="border border-gray-200 rounded-md p-4 text-center">
-                                      <img src={state.logoUrl} alt="Company Logo Preview" className="mx-auto max-h-20 object-contain mb-2" />
-                                      <button type="button" onClick={() => setState(s => ({ ...s, logoUrl: null }))} className="text-xs text-red-500 hover:text-red-700">Remove Logo</button>
-                                    </div>
-                                  ) : (
-                                    <div className="border-2 border-dashed border-gray-300 rounded-md p-6 text-center">
-                                      <button type="button" onClick={() => logoInputRef.current?.click()} className="w-full py-3 px-4 text-sm font-medium bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-md flex flex-col items-center justify-center gap-2 border border-gray-200 hover:border-gray-300 transition-colors">
-                                        <span>📤</span>
-                                        <span>Upload Company Logo</span>
-                                        <span className="text-xs text-gray-400">PNG, JPG up to 10MB</span>
-                                      </button>
-                                    </div>
-                                  )}
-                              </div>
-                            </div>
-                          </section>
-                          
-                          <section className="bg-white rounded-lg shadow-md p-6" aria-labelledby="billing-details-heading">
-                            <h2 id="billing-details-heading" className="sr-only">Billing Details</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                                <div className="space-y-4">
-                                    <h3 className="text-lg font-semibold text-gray-800">From</h3>
-                                    {fromFields.map(f => renderField(f.name, f.label, f.placeholder, f.type))}
-                                </div>
-                                <div className="space-y-4">
-                                    <h3 className="text-lg font-semibold text-gray-800">Bill To</h3>
-                                    {toFields.map(f => renderField(f.name, f.label, f.placeholder, f.type))}
-                                </div>
-                            </div>
-                          </section>
-
-                          <section className="bg-white rounded-lg shadow-md p-6" aria-labelledby="items-heading">
-                            <h2 id="items-heading" className="text-lg font-semibold text-gray-800 mb-4">Items</h2>
-                            <div className="overflow-x-auto">
-                                <table className="w-full min-w-[600px]" aria-label="Invoice items">
-                                    <thead>
-                                        <tr className="border-b border-gray-200">
-                                            <th scope="col" className="text-left py-2 pr-2 text-xs font-medium text-gray-500 uppercase tracking-wider w-auto">Description</th>
-                                            <th scope="col" className="text-center py-2 px-2 text-xs font-medium text-gray-500 uppercase tracking-wider w-28">Rate</th>
-                                            <th scope="col" className="text-center py-2 px-2 text-xs font-medium text-gray-500 uppercase tracking-wider w-20">Qty</th>
-                                            <th scope="col" className="text-right py-2 px-2 text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Amount</th>
-                                            <th scope="col" className="text-right py-2 pl-2 text-xs font-medium text-gray-500 uppercase tracking-wider w-10"><span className="sr-only">Actions</span></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {state.items.map((item, index) => (
-                                            <tr key={item.id} className="border-b border-gray-100 last:border-b-0">
-                                                <td className="py-2 pr-2">
-                                                    <input type="text" placeholder="Item Description" value={item.description} onChange={(e) => handleItemChange(index, 'description', e.target.value)} className={`${INPUT_BASE_CLASS} py-1.5`} aria-label={`Item ${index + 1} description`} />
-                                                </td>
-                                                <td className="py-2 px-2">
-                                                    <input type="number" placeholder="0.00" value={item.rate} onChange={(e) => handleItemChange(index, 'rate', e.target.value)} step="0.01" className={`${INPUT_BASE_CLASS} text-right py-1.5`} aria-label={`Item ${index + 1} rate`} />
-                                                </td>
-                                                <td className="py-2 px-2">
-                                                    <input type="number" placeholder="1" value={item.quantity} onChange={(e) => handleItemChange(index, 'quantity', e.target.value)} min="0" className={`${INPUT_BASE_CLASS} text-center py-1.5`} aria-label={`Item ${index + 1} quantity`} />
-                                                </td>
-                                                <td className="py-2 px-2 text-right">
-                                                    <span className="text-sm text-gray-700">{formatCurrency((Number(item.rate) || 0) * (Number(item.quantity) || 0), state.selectedCurrency)}</span>
-                                                </td>
-                                                <td className="py-2 pl-2 text-right align-middle">
-                                                    {(state.items.length > 1 || (item.description === '' && Number(item.rate) === 0 && Number(item.quantity) === 1)) && (
-                                                      <IconButton onClick={() => removeItem(index)} ariaLabel={`Remove item ${index + 1}`} 
-                                                        disabled={state.items.length <=1 && !(item.description === '' && Number(item.rate) === 0 && Number(item.quantity) === 1) }>
-                                                        ✕
-                                                      </IconButton>
-                                                    )}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div className="flex items-center justify-between mt-4">
-                                <button type="button" onClick={addItem} className="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-800 py-2 px-3 rounded-md hover:bg-indigo-50 transition-colors">
-                                    + Add Item
-                                </button>
-                                <div className="w-64" aria-live="polite">
-                                    <div className="space-y-1 text-sm">
-                                        <div className="flex justify-between"><span className="text-gray-600">Subtotal</span><span className="text-gray-800 font-medium">{formatCurrency(subtotal, state.selectedCurrency)}</span></div>
-                                        <div className="flex justify-between font-semibold text-base"><span className="text-gray-700">Total</span><span className="text-gray-900">{formatCurrency(total, state.selectedCurrency)}</span></div>
-                                        <div className="flex justify-between font-bold text-indigo-600 text-lg border-t border-gray-200 pt-1 mt-1"><span>Amount Due</span><span>{formatCurrency(balanceDue, state.selectedCurrency)}</span></div>
-                                    </div>
-                                </div>
-                            </div>
-                          </section>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <section className="bg-white rounded-lg shadow-md p-6" aria-labelledby="additional-details-heading">
-                                <h2 id="additional-details-heading" className="text-lg font-semibold text-gray-800 mb-3">Additional Details</h2>
-                                <div>
-                                    <label htmlFor="memo" className={LABEL_BASE_CLASS}>Memo / Notes</label>
-                                    <textarea id="memo" name="memo" value={state.memo} onChange={handleInputChange} placeholder="Add any additional notes or payment terms..." rows={3} className={`${INPUT_BASE_CLASS} min-h-[80px]`}></textarea>
-                                </div>
-                            </section>
-                            <section className="bg-white rounded-lg shadow-md p-6" aria-labelledby="signature-heading">
-                                <h2 id="signature-heading" className="text-lg font-semibold text-gray-800 mb-3 text-center md:text-left">Signature</h2>
-                                  {state.signature ? (
-                                    <div className="border border-gray-200 rounded-md p-4 text-center">
-                                      {(state.signature.startsWith('data:image') || state.signature.startsWith('blob:')) ? (
-                                        <img src={state.signature} alt="Signature preview" className="mx-auto max-h-20 object-contain mb-2" />
-                                      ) : (
-                                        <p className="font-serif text-2xl break-all text-gray-700 mb-2">{state.signature}</p>
-                                      )}
-                                      <button type="button" onClick={() => setState(s => ({ ...s, signature: null, showSignatureTypeInput: false, typedSignatureInput: '' }))} className="text-xs text-red-500 hover:text-red-700">Clear Signature</button>
-                                    </div>
-                                  ) : (
-                                    <div className="border-2 border-dashed border-gray-300 rounded-md p-4 text-center">
-                                      {state.showSignatureTypeInput ? (
-                                        <div className="space-y-3">
-                                          <label htmlFor="typedSignatureInput" className="sr-only">Type your signature</label>
-                                          <input id="typedSignatureInput" type="text" placeholder="Type your name" value={state.typedSignatureInput} onChange={(e) => setState(s => ({ ...s, typedSignatureInput: e.target.value }))} className={`${INPUT_BASE_CLASS} text-center`} />
-                                          <div className="flex gap-2 justify-center">
-                                            <button type="button" onClick={() => {
-                                              const trimmedSignature = state.typedSignatureInput.trim();
-                                              setState(s => ({ ...s, signature: trimmedSignature || null, showSignatureTypeInput: false, typedSignatureInput: '' }));
-                                            }} className="px-4 py-1.5 text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors">Save Signature</button>
-                                            <button type="button" onClick={() => setState(s => ({ ...s, showSignatureTypeInput: false, typedSignatureInput: '' }))} className="px-4 py-1.5 text-sm font-medium bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md transition-colors">Cancel</button>
-                                          </div>
-                                        </div>
-                                      ) : (
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                          <button type="button" onClick={() => signatureUploadInputRef.current?.click()} className="py-3 px-3 text-sm font-medium bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-md flex flex-col items-center justify-center gap-1 border border-gray-200 hover:border-gray-300 transition-colors h-16">
-                                            <span>📤</span><span className="text-xs">Upload Image</span>
-                                          </button>
-                                          <button type="button" onClick={() => setState(s => ({ ...s, showSignatureTypeInput: true, typedSignatureInput: s.fromName }))} className="py-3 px-3 text-sm font-medium bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-md flex flex-col items-center justify-center gap-1 border border-gray-200 hover:border-gray-300 transition-colors h-16 overflow-hidden">
-                                            <span className="text-xl leading-none">✍️</span><span className="text-xs">Type Name</span>
-                                          </button>
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-                            </section>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="lg:col-span-2 bg-white rounded-lg shadow-md overflow-auto" ref={mainPreviewRef} role="tabpanel" aria-labelledby="preview-tab-button"> {/* Use a unique ID for the button if needed */}
-                          <InvoicePreview state={state} isForPdf={false} />
-                        </div>
-                      )}
-
-                      <aside className="lg:sticky lg:top-24 h-fit space-y-6">
-                        <section className="bg-white rounded-lg shadow-md p-5" aria-labelledby="currency-settings-heading">
-                          <h3 id="currency-settings-heading" className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-3">Currency</h3>
-                          <div className="relative">
-                            <label htmlFor="selectedCurrency" className="sr-only">Select Currency</label>
-                            <select id="selectedCurrency" name="selectedCurrency" value={state.selectedCurrency} onChange={handleInputChange} className={`${INPUT_BASE_CLASS} appearance-none pr-8`}>
-                              {[...CURRENCIES].sort((a, b) => a.name.localeCompare(b.name)).map(c => (
-  <option key={c.code} value={c.code}>{c.name}</option>
-))}
-
-                            </select>
-                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700" aria-hidden="true">
-                                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-                            </div>
-                          </div>
-                        </section>
-                        <section className="bg-white rounded-lg shadow-md p-5" aria-labelledby="actions-heading">
-                          <h3 id="actions-heading" className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-3">Actions</h3>
-                          <div className="space-y-3">
-                            <button type="button" onClick={() => setState(s => ({ ...s, activeTab: 'preview' }))} className="w-full flex items-center justify-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 py-2.5 px-4 rounded-md transition-colors">
-                              👁️ Preview Invoice
-                            </button>
-                            <button type="button" onClick={handleDownloadPdf} disabled={state.isGeneratingPdf} className="w-full flex items-center justify-center gap-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 py-2.5 px-4 rounded-md transition-colors disabled:opacity-70 disabled:cursor-not-allowed">
-                              📥 {state.isGeneratingPdf ? 'Generating...' : 'Download PDF'}
-                            </button>
-                          </div>
-                        </section>
-                      </aside>
-                    </div>
-                  </main>
-                </div>
-              );
-            };
-
-         
-<!-- ✅ React App Mounting Script -->
-<script type="text/babel">
-  const embedRootElement = document.getElementById('invoice-generator-embed-root');
-  if (embedRootElement) {
-    const root = ReactDOM.createRoot(embedRootElement);
-    root.render(
-      <StrictMode>
-        <App />
-      </StrictMode>
+    // --- Spinner Component ---
+    const Spinner = () => (
+      <div className="invoice-embed-spinner-animation h-5 w-5 border-2 border-gray-300 border-t-indigo-600 rounded-full" role="status">
+        <span className="sr-only">Loading...</span>
+      </div>
     );
-  } else {
-    console.error("Embed root element 'invoice-generator-embed-root' not found.");
-  }
-</script>
 
-<!-- ✅ Iframe Height Auto-Resize Script (separate script block) -->
-<script>
-(function() {
-  function postHeight() {
-    var container = document.getElementById('invoice-generator-embed-container');
-    if (!container) return;
-    var height = container.offsetHeight;
-    window.parent.postMessage(
-      { type: 'INVOICE_IFRAME_HEIGHT', height: height },
-      '*'
+    // --- IconButton Component ---
+    const IconButton = ({ onClick, children, className = '', ariaLabel, disabled = false }) => (
+      <button
+        type="button"
+        onClick={onClick}
+        aria-label={ariaLabel}
+        disabled={disabled}
+        className={`p-1 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1
+          ${disabled ? 'text-gray-300 cursor-not-allowed' : 'text-gray-400 hover:text-red-500 focus:ring-red-400'}
+          ${className}`}
+      >
+        {children}
+      </button>
     );
-  }
 
-  document.addEventListener('DOMContentLoaded', postHeight);
+    // --- InvoicePreview Component (trimmed for brevity; include all fields as needed) ---
+    const InvoicePreview = ({ state, isForPdf = false }) => {
+      const subtotal = state.items.reduce((acc, item) => acc + (Number(item.rate) || 0) * (Number(item.quantity) || 0), 0);
+      const total = subtotal;
+      const balanceDue = total;
+      return (
+        <div className="bg-white p-8 md:p-10 lg:p-12">
+          <div className="flex justify-between items-start mb-8">
+            <h1 className="text-5xl md:text-6xl font-bold text-gray-900">Invoice</h1>
+            {state.logoUrl && (
+              <img src={state.logoUrl} alt="Company Logo" className="max-h-20 object-contain" />
+            )}
+          </div>
+          <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4 text-base">
+            <div className="space-y-0.5">
+              <div className="flex"><span className="w-32 font-medium text-gray-600">Invoice #</span><span className="text-gray-900">{state.invoiceNumber}</span></div>
+              <div className="flex"><span className="w-32 font-medium text-gray-600">Date</span><span className="text-gray-900">{formatDate(state.invoiceDate)}</span></div>
+              <div className="flex"><span className="w-32 font-medium text-gray-600">Due Date</span><span className="text-gray-900">{formatDate(state.dueDate)}</span></div>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-x-8 mb-10 text-base">
+            <div>
+              <h3 className="text-lg font-semibold uppercase tracking-wider text-gray-600 mb-3 text-sm">From</h3>
+              <div className="space-y-1 text-gray-900">
+                <p className="font-medium">{state.fromName || 'Your Company Name'}</p>
+                <p>{state.fromEmail || 'your.email@example.com'}</p>
+                <p>{state.fromAddress1 || '123 Main St, City, State, Zip'}</p>
+                {state.fromAddress2 && <p>{state.fromAddress2}</p>}
+              </div>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold uppercase tracking-wider text-gray-600 mb-3 text-sm">To</h3>
+              <div className="space-y-1 text-gray-900">
+                <p className="font-medium">{state.toName || 'Client Company Name'}</p>
+                <p>{state.toEmail || 'client.email@example.com'}</p>
+                <p>{state.toAddress1 || '456 Client Ave, City, State, Zip'}</p>
+                {state.toAddress2 && <p>{state.toAddress2}</p>}
+                {state.toFax && <p>Fax: {state.toFax}</p>}
+              </div>
+            </div>
+          </div>
+          <div className="mb-10">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b-2 border-gray-200">
+                  <th className="text-left py-0.5 pr-2 text-xs font-semibold uppercase tracking-wider text-gray-600">Item</th>
+                  <th className="text-center py-0.5 px-1 text-xs font-semibold uppercase tracking-wider text-gray-600">Qty</th>
+                  <th className="text-right py-0.5 px-1 text-xs font-semibold uppercase tracking-wider text-gray-600">Price</th>
+                  <th className="text-right py-0.5 pl-1 text-xs font-semibold uppercase tracking-wider text-gray-600">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {state.items.map((item) => (
+                  <tr key={item.id} className="border-b border-gray-100 last:border-b-0 text-base">
+                    <td className="py-0.5 pr-2 text-gray-900">{item.description || 'Service or Product Description'}</td>
+                    <td className="py-0.5 px-1 text-center text-gray-900">{item.quantity}</td>
+                    <td className="py-0.5 px-1 text-right text-gray-900">{formatCurrency(Number(item.rate), state.selectedCurrency)}</td>
+                    <td className="py-0.5 pl-1 text-right font-medium text-gray-900">{formatCurrency((Number(item.rate) || 0) * (Number(item.quantity) || 0), state.selectedCurrency)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="flex justify-end mb-10">
+            <div className="w-full sm:w-64 space-y-0.5 text-base">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Subtotal</span>
+                <span className="text-gray-900 font-medium">{formatCurrency(subtotal, state.selectedCurrency)}</span>
+              </div>
+              <div className="flex justify-between text-lg font-bold border-t border-gray-200 pt-0.5 mt-0.5">
+                <span className="text-gray-900">Total</span>
+                <span className="text-gray-900">{formatCurrency(total, state.selectedCurrency)}</span>
+              </div>
+              <div className="flex justify-between text-2xl font-bold text-indigo-600">
+                <span>Amount Due</span>
+                <span>{formatCurrency(balanceDue, state.selectedCurrency)}</span>
+              </div>
+            </div>
+          </div>
+          {state.memo && (
+            <div className="mb-10">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-2">Notes</h4>
+              <p className="text-base text-gray-900 whitespace-pre-wrap">{state.memo}</p>
+            </div>
+          )}
+          {state.signature && (
+            <div className="mt-12">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-3">Signature</h4>
+              {(state.signature.startsWith('data:image') || state.signature.startsWith('blob:')) ? (
+                <img src={state.signature} alt="Signature Preview" className="max-h-20 border-b-2 border-gray-300 pb-1 object-contain" />
+              ) : (
+                <p className="font-serif text-3xl border-b-2 border-gray-300 pb-1 inline-block break-all text-gray-900">
+                  {state.signature}
+                </p>
+              )}
+            </div>
+          )}
+          <div className="text-center mt-12 pt-4 border-t border-gray-200">
+            <p className="text-xs text-gray-500">Powered by <span className="font-medium text-indigo-600">Otto</span></p>
+          </div>
+        </div>
+      );
+    };
 
-  var container = document.getElementById('invoice-generator-embed-container');
-  if (container && window.ResizeObserver) {
-    var ro = new ResizeObserver(postHeight);
-    ro.observe(container);
-  }
+    // --- Main App Component ---
+    const App = () => {
+      const [state, setState] = useState({
+        invoiceNumber: 'INV0001',
+        invoiceDate: DEFAULT_INVOICE_DATE,
+        dueDate: DEFAULT_DUE_DATE,
+        logoUrl: null,
+        fromName: '',
+        fromEmail: '',
+        fromAddress1: '',
+        fromAddress2: '',
+        fromBusinessNumber: '',
+        toName: '',
+        toEmail: '',
+        toAddress1: '',
+        toAddress2: '',
+        toFax: '',
+        items: [{ ...INITIAL_ITEM, id: generateItemId() }],
+        memo: '',
+        signature: null,
+        selectedCurrency: 'USD',
+        showAdditionalFromDetails: false, 
+        activeTab: 'invoice',
+        errors: {},
+        isGeneratingPdf: false,
+        showSignatureTypeInput: false,
+        typedSignatureInput: '',
+      });
 
-  window.addEventListener('resize', postHeight);
+      const logoInputRef = useRef(null);
+      const signatureUploadInputRef = useRef(null);
+      const mainPreviewRef = useRef(null);
 
-  window.addEventListener('message', function(event) {
-    if (event.data === 'REQUEST_INVOICE_HEIGHT') {
-      postHeight();
+      const handleInputChange = useCallback((e) => {
+        const { name, value } = e.target;
+        setState(prevState => ({
+          ...prevState,
+          [name]: value,
+          errors: { ...prevState.errors, [name]: undefined }
+        }));
+      }, []);
+
+      const handleFileUpload = useCallback((e, field) => {
+        const file = e.target.files?.[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            setState(prevState => ({ ...prevState, [field]: event.target?.result }));
+          };
+          reader.readAsDataURL(file);
+        }
+        if(e.target) e.target.value = ''; // Reset file input
+      }, []);
+
+      const handleItemChange = useCallback((index, field, value) => {
+        const newItems = state.items.map((item, i) => {
+          if (i === index) {
+            let processedValue = value;
+            if (field === 'rate' || field === 'quantity') {
+              processedValue = parseFloat(value.toString()) || 0;
+              if (field === 'quantity' && processedValue < 0) processedValue = 0;
+            }
+            return { ...item, [field]: processedValue };
+          }
+          return item;
+        });
+        setState(prevState => ({ ...prevState, items: newItems }));
+      }, [state.items]);
+
+      const addItem = useCallback(() => {
+        setState(prevState => ({
+          ...prevState,
+          items: [...prevState.items, { ...INITIAL_ITEM, id: generateItemId() }]
+        }));
+      }, []);
+
+      const removeItem = useCallback((indexToRemove) => {
+        if (state.items.length <= 1) {
+            const item = state.items[0];
+            if (item.description === '' && Number(item.rate) === 0 && Number(item.quantity) === 1) {
+                setState(prevState => ({ ...prevState, items: [{ ...INITIAL_ITEM, id: generateItemId() }] }));
+                return;
+            } else {
+                return; 
+            }
+        }
+        const newItems = state.items.filter((_, i) => i !== indexToRemove);
+        setState(prevState => ({ ...prevState, items: newItems }));
+      }, [state.items]);
+
+      const validateForm = useCallback((formState) => {
+        const errors = {};
+        REQUIRED_FIELDS_CONFIG.forEach(fieldInfo => {
+          const value = formState[fieldInfo.key]; 
+          if (!value?.toString().trim()) {
+            errors[fieldInfo.key] = `${fieldInfo.label} is required.`;
+          }
+        });
+
+        if (formState.fromEmail && !/\S+@\S+\.\S+/.test(formState.fromEmail)) {
+          errors.fromEmail = 'Invalid email format.';
+        }
+        if (formState.toEmail && !/\S+@\S+\.\S+/.test(formState.toEmail)) {
+          errors.toEmail = 'Invalid email format.';
+        }
+        return errors;
+      }, []);
+      
+      const handleDownloadPdf = async () => {
+        const validationErrors = validateForm(state);
+        if (Object.keys(validationErrors).length > 0) {
+            setState(prev => ({ ...prev, errors: validationErrors, activeTab: 'invoice' }));
+            alert("Please fill in all required fields marked with * before downloading the PDF.");
+            return;
+        }
+
+        setState(prev => ({ ...prev, activeTab: 'preview', isGeneratingPdf: true }));
+
+        setTimeout(async () => {
+            try {
+                const html2pdf = window.html2pdf; 
+                const element = mainPreviewRef.current;
+                if (!html2pdf) throw new Error("PDF generation library (html2pdf.js) is not available.");
+                if (!element) throw new Error("Preview content is not ready for PDF generation.");
+                if (element.offsetWidth === 0 || element.offsetHeight === 0) throw new Error("Preview content has zero dimensions. PDF cannot be generated.");
+                const opt = {
+                    margin: [0.4, 0.4, 0.4, 0.4],
+                    filename: `${state.invoiceNumber || 'invoice'}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: {
+                        scale: 2,
+                        useCORS: true,
+                        letterRendering: true,
+                        allowTaint: true,
+                    },
+                    jsPDF: {
+                        unit: 'in',
+                        format: 'letter',
+                        orientation: 'portrait',
+                        compress: true, 
+                    }
+                };
+                window.scrollTo(0, 0); 
+                await html2pdf().set(opt).from(element).save();
+            } catch (error) {
+                alert(`Could not generate PDF. Error: ${error instanceof Error ? error.message : String(error)}`);
+            } finally {
+                setState(prev => ({ ...prev, isGeneratingPdf: false }));
+            }
+        }, 800); 
+      };
+
+      const subtotal = state.items.reduce((acc, item) => acc + (Number(item.rate) || 0) * (Number(item.quantity) || 0), 0);
+      const total = subtotal;
+      const balanceDue = total;
+
+      const renderField = (fieldName, label, placeholder, type = 'text') => (
+        <div key={fieldName}>
+          <label htmlFor={fieldName} className={LABEL_BASE_CLASS}>{label}</label>
+          <input
+            type={type}
+            id={fieldName}
+            name={fieldName}
+            value={state[fieldName] || ''}
+            onChange={handleInputChange}
+            placeholder={placeholder}
+            className={INPUT_BASE_CLASS}
+            aria-required={REQUIRED_FIELDS_CONFIG.some(f => f.key === fieldName)}
+          />
+          {state.errors[fieldName] && <p className="text-red-500 text-xs mt-1" role="alert">{state.errors[fieldName]}</p>}
+        </div>
+      );
+      
+      const fromFields = [
+        { name: 'fromName', label: 'Name *', placeholder: 'Your Company Name' },
+        { name: 'fromEmail', label: 'Email *', placeholder: 'your.email@example.com', type: 'email' },
+        { name: 'fromAddress1', label: 'Address Line 1 *', placeholder: '123 Main St' },
+        { name: 'fromAddress2', label: 'Address Line 2', placeholder: 'Suite, Apt, etc.' },
+      ];
+      const toFields = [
+        { name: 'toName', label: 'Name *', placeholder: 'Client Company Name' },
+        { name: 'toEmail', label: 'Email *', placeholder: 'client.email@example.com', type: 'email' },
+        { name: 'toAddress1', label: 'Address Line 1 *', placeholder: '456 Client Ave' },
+        { name: 'toAddress2', label: 'Address Line 2', placeholder: 'Suite, Apt, etc.' },
+        { name: 'toFax', label: 'Fax (Optional)', placeholder: '(123) 456-7890' },
+      ];
+
+      return (
+        <div className="min-h-screen bg-gray-100">
+          {state.isGeneratingPdf && (
+            <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50" role="dialog" aria-modal="true" aria-labelledby="loading-message">
+              <div className="bg-white p-6 rounded-lg shadow-xl text-center flex items-center space-x-3">
+                <Spinner />
+                <p id="loading-message" className="text-sm font-medium text-gray-700">Generating PDF, please wait...</p>
+              </div>
+            </div>
+          )}
+
+          <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
+            <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between items-center py-4">
+                <div className="flex items-center">
+                  <span className="text-2xl font-bold text-indigo-600">otto</span>
+                </div>
+                <nav className="flex space-x-1" aria-label="Main navigation">
+                  {([
+                    {key: 'invoice', label: 'Invoice Editor'}, 
+                    {key: 'preview', label: 'Live Preview'}
+                  ]).map(tab => (
+                    <button
+                      key={tab.key}
+                      type="button"
+                      role="tab"
+                      aria-selected={state.activeTab === tab.key}
+                      onClick={() => setState(s => ({ ...s, activeTab: tab.key }))}
+                      className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                        state.activeTab === tab.key
+                          ? 'bg-indigo-100 text-indigo-700'
+                          : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </nav>
+              </div>
+            </div>
+          </header>
+
+          <main className="max-w-screen-xl mx-auto p-4 sm:p-6 lg:p-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+              {state.activeTab === 'invoice' ? (
+                <div className="lg:col-span-2 space-y-6" role="tabpanel" aria-labelledby="invoice-tab-button">
+                  <input type="file" ref={logoInputRef} onChange={(e) => handleFileUpload(e, 'logoUrl')} accept="image/*" className="hidden" aria-label="Upload company logo" />
+                  <input type="file" ref={signatureUploadInputRef} onChange={(e) => handleFileUpload(e, 'signature')} accept="image/*" className="hidden" aria-label="Upload signature image"/>
+
+                  <section className="bg-white rounded-lg shadow-md p-6" aria-labelledby="invoice-details-heading">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                      <div className="space-y-4">
+                        <h2 id="invoice-details-heading" className="text-lg font-semibold text-gray-800 mb-0">Invoice Details</h2>
+                        {renderField('invoiceNumber', 'Invoice Number', 'INV0001')}
+                        {renderField('invoiceDate', 'Invoice Date', '', 'date')}
+                        {renderField('dueDate', 'Due Date', '', 'date')}
+                      </div>
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold text-gray-800">Company Logo</h3>
+                          {state.logoUrl ? (
+                            <div className="border border-gray-200 rounded-md p-4 text-center">
+                              <img src={state.logoUrl} alt="Company Logo Preview" className="mx-auto max-h-20 object-contain mb-2" />
+                              <button type="button" onClick={() => setState(s => ({ ...s, logoUrl: null }))} className="text-xs text-red-500 hover:text-red-700">Remove Logo</button>
+                            </div>
+                          ) : (
+                            <div className="border-2 border-dashed border-gray-300 rounded-md p-6 text-center">
+                              <button type="button" onClick={() => logoInputRef.current?.click()} className="w-full py-3 px-4 text-sm font-medium bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-md flex flex-col items-center justify-center gap-2 border border-gray-200 hover:border-gray-300 transition-colors">
+                                <span>📤</span>
+                                <span>Upload Company Logo</span>
+                                <span className="text-xs text-gray-400">PNG, JPG up to 10MB</span>
+                              </button>
+                            </div>
+                          )}
+                      </div>
+                    </div>
+                  </section>
+                  
+                  <section className="bg-white rounded-lg shadow-md p-6" aria-labelledby="billing-details-heading">
+                    <h2 id="billing-details-heading" className="sr-only">Billing Details</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                        <div className="space-y-4">
+                            <h3 className="text-lg font-semibold text-gray-800">From</h3>
+                            {fromFields.map(f => renderField(f.name, f.label, f.placeholder, f.type))}
+                        </div>
+                        <div className="space-y-4">
+                            <h3 className="text-lg font-semibold text-gray-800">Bill To</h3>
+                            {toFields.map(f => renderField(f.name, f.label, f.placeholder, f.type))}
+                        </div>
+                    </div>
+                  </section>
+
+                  <section className="bg-white rounded-lg shadow-md p-6" aria-labelledby="items-heading">
+                    <h2 id="items-heading" className="text-lg font-semibold text-gray-800 mb-4">Items</h2>
+                    <div className="overflow-x-auto">
+                        <table className="w-full min-w-[600px]" aria-label="Invoice items">
+                            <thead>
+                                <tr className="border-b border-gray-200">
+                                    <th scope="col" className="text-left py-2 pr-2 text-xs font-medium text-gray-500 uppercase tracking-wider w-auto">Description</th>
+                                    <th scope="col" className="text-center py-2 px-2 text-xs font-medium text-gray-500 uppercase tracking-wider w-28">Rate</th>
+                                    <th scope="col" className="text-center py-2 px-2 text-xs font-medium text-gray-500 uppercase tracking-wider w-20">Qty</th>
+                                    <th scope="col" className="text-right py-2 px-2 text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Amount</th>
+                                    <th scope="col" className="text-right py-2 pl-2 text-xs font-medium text-gray-500 uppercase tracking-wider w-10"><span className="sr-only">Actions</span></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {state.items.map((item, index) => (
+                                    <tr key={item.id} className="border-b border-gray-100 last:border-b-0">
+                                        <td className="py-2 pr-2">
+                                            <input type="text" placeholder="Item Description" value={item.description} onChange={(e) => handleItemChange(index, 'description', e.target.value)} className={`${INPUT_BASE_CLASS} py-1.5`} aria-label={`Item ${index + 1} description`} />
+                                        </td>
+                                        <td className="py-2 px-2">
+                                            <input type="number" placeholder="0.00" value={item.rate} onChange={(e) => handleItemChange(index, 'rate', e.target.value)} step="0.01" className={`${INPUT_BASE_CLASS} text-right py-1.5`} aria-label={`Item ${index + 1} rate`} />
+                                        </td>
+                                        <td className="py-2 px-2">
+                                            <input type="number" placeholder="1" value={item.quantity} onChange={(e) => handleItemChange(index, 'quantity', e.target.value)} min="0" className={`${INPUT_BASE_CLASS} text-center py-1.5`} aria-label={`Item ${index + 1} quantity`} />
+                                        </td>
+                                        <td className="py-2 px-2 text-right">
+                                            <span className="text-sm text-gray-700">{formatCurrency((Number(item.rate) || 0) * (Number(item.quantity) || 0), state.selectedCurrency)}</span>
+                                        </td>
+                                        <td className="py-2 pl-2 text-right align-middle">
+                                            {(state.items.length > 1 || (item.description === '' && Number(item.rate) === 0 && Number(item.quantity) === 1)) && (
+                                              <IconButton onClick={() => removeItem(index)} ariaLabel={`Remove item ${index + 1}`} 
+                                                disabled={state.items.length <=1 && !(item.description === '' && Number(item.rate) === 0 && Number(item.quantity) === 1) }>
+                                                ✕
+                                              </IconButton>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div className="flex items-center justify-between mt-4">
+                        <button type="button" onClick={addItem} className="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-800 py-2 px-3 rounded-md hover:bg-indigo-50 transition-colors">
+                            + Add Item
+                        </button>
+                        <div className="w-64" aria-live="polite">
+                            <div className="space-y-1 text-sm">
+                                <div className="flex justify-between"><span className="text-gray-600">Subtotal</span><span className="text-gray-800 font-medium">{formatCurrency(subtotal, state.selectedCurrency)}</span></div>
+                                <div className="flex justify-between font-semibold text-base"><span className="text-gray-700">Total</span><span className="text-gray-900">{formatCurrency(total, state.selectedCurrency)}</span></div>
+                                <div className="flex justify-between font-bold text-indigo-600 text-lg border-t border-gray-200 pt-1 mt-1"><span>Amount Due</span><span>{formatCurrency(balanceDue, state.selectedCurrency)}</span></div>
+                            </div>
+                        </div>
+                    </div>
+                  </section>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <section className="bg-white rounded-lg shadow-md p-6" aria-labelledby="additional-details-heading">
+                        <h2 id="additional-details-heading" className="text-lg font-semibold text-gray-800 mb-3">Additional Details</h2>
+                        <div>
+                            <label htmlFor="memo" className={LABEL_BASE_CLASS}>Memo / Notes</label>
+                            <textarea id="memo" name="memo" value={state.memo} onChange={handleInputChange} placeholder="Add any additional notes or payment terms..." rows={3} className={`${INPUT_BASE_CLASS} min-h-[80px]`}></textarea>
+                        </div>
+                    </section>
+                    <section className="bg-white rounded-lg shadow-md p-6" aria-labelledby="signature-heading">
+                        <h2 id="signature-heading" className="text-lg font-semibold text-gray-800 mb-3 text-center md:text-left">Signature</h2>
+                          {state.signature ? (
+                            <div className="border border-gray-200 rounded-md p-4 text-center">
+                              {(state.signature.startsWith('data:image') || state.signature.startsWith('blob:')) ? (
+                                <img src={state.signature} alt="Signature preview" className="mx-auto max-h-20 object-contain mb-2" />
+                              ) : (
+                                <p className="font-serif text-2xl break-all text-gray-700 mb-2">{state.signature}</p>
+                              )}
+                              <button type="button" onClick={() => setState(s => ({ ...s, signature: null, showSignatureTypeInput: false, typedSignatureInput: '' }))} className="text-xs text-red-500 hover:text-red-700">Clear Signature</button>
+                            </div>
+                          ) : (
+                            <div className="border-2 border-dashed border-gray-300 rounded-md p-4 text-center">
+                              {state.showSignatureTypeInput ? (
+                                <div className="space-y-3">
+                                  <label htmlFor="typedSignatureInput" className="sr-only">Type your signature</label>
+                                  <input id="typedSignatureInput" type="text" placeholder="Type your name" value={state.typedSignatureInput} onChange={(e) => setState(s => ({ ...s, typedSignatureInput: e.target.value }))} className={`${INPUT_BASE_CLASS} text-center`} />
+                                  <div className="flex gap-2 justify-center">
+                                    <button type="button" onClick={() => {
+                                      const trimmedSignature = state.typedSignatureInput.trim();
+                                      setState(s => ({ ...s, signature: trimmedSignature || null, showSignatureTypeInput: false, typedSignatureInput: '' }));
+                                    }} className="px-4 py-1.5 text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors">Save Signature</button>
+                                    <button type="button" onClick={() => setState(s => ({ ...s, showSignatureTypeInput: false, typedSignatureInput: '' }))} className="px-4 py-1.5 text-sm font-medium bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md transition-colors">Cancel</button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  <button type="button" onClick={() => signatureUploadInputRef.current?.click()} className="py-3 px-3 text-sm font-medium bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-md flex flex-col items-center justify-center gap-1 border border-gray-200 hover:border-gray-300 transition-colors h-16">
+                                    <span>📤</span><span className="text-xs">Upload Image</span>
+                                  </button>
+                                  <button type="button" onClick={() => setState(s => ({ ...s, showSignatureTypeInput: true, typedSignatureInput: s.fromName }))} className="py-3 px-3 text-sm font-medium bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-md flex flex-col items-center justify-center gap-1 border border-gray-200 hover:border-gray-300 transition-colors h-16 overflow-hidden">
+                                    <span className="text-xl leading-none">✍️</span><span className="text-xs">Type Name</span>
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                    </section>
+                  </div>
+                </div>
+              ) : (
+                <div className="lg:col-span-2 bg-white rounded-lg shadow-md overflow-auto" ref={mainPreviewRef} role="tabpanel" aria-labelledby="preview-tab-button">
+                  <InvoicePreview state={state} isForPdf={false} />
+                </div>
+              )}
+
+              <aside className="lg:sticky lg:top-24 h-fit space-y-6">
+                <section className="bg-white rounded-lg shadow-md p-5" aria-labelledby="currency-settings-heading">
+                  <h3 id="currency-settings-heading" className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-3">Currency</h3>
+                  <div className="relative">
+                    <label htmlFor="selectedCurrency" className="sr-only">Select Currency</label>
+                    <select id="selectedCurrency" name="selectedCurrency" value={state.selectedCurrency} onChange={handleInputChange} className={`${INPUT_BASE_CLASS} appearance-none pr-8`}>
+                      {CURRENCIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700" aria-hidden="true">
+                        <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                    </div>
+                  </div>
+                </section>
+                <section className="bg-white rounded-lg shadow-md p-5" aria-labelledby="actions-heading">
+                  <h3 id="actions-heading" className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-3">Actions</h3>
+                  <div className="space-y-3">
+                    <button type="button" onClick={() => setState(s => ({ ...s, activeTab: 'preview' }))} className="w-full flex items-center justify-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 py-2.5 px-4 rounded-md transition-colors">
+                      👁️ Preview Invoice
+                    </button>
+                    <button type="button" onClick={handleDownloadPdf} disabled={state.isGeneratingPdf} className="w-full flex items-center justify-center gap-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 py-2.5 px-4 rounded-md transition-colors disabled:opacity-70 disabled:cursor-not-allowed">
+                      📥 {state.isGeneratingPdf ? 'Generating...' : 'Download PDF'}
+                    </button>
+                  </div>
+                </section>
+              </aside>
+            </div>
+          </main>
+        </div>
+      );
+    };
+
+    // --- Mount React App ---
+    const embedRootElement = document.getElementById('invoice-generator-embed-root');
+    if (embedRootElement) {
+      const root = ReactDOM.createRoot(embedRootElement);
+      root.render(
+        <StrictMode>
+          <App />
+        </StrictMode>
+      );
+    } else {
+      console.error("Embed root element 'invoice-generator-embed-root' not found.");
     }
-  });
-})();
-</script>
+  </script>
 
+  <!-- Iframe Height Auto-Resize Script -->
+  <script>
+    (function() {
+      function postHeight() {
+        var container = document.getElementById('invoice-generator-embed-container');
+        if (!container) return;
+        var height = container.offsetHeight;
+        window.parent.postMessage(
+          { type: 'INVOICE_IFRAME_HEIGHT', height: height },
+          '*'
+        );
+      }
+      document.addEventListener('DOMContentLoaded', postHeight);
+      var container = document.getElementById('invoice-generator-embed-container');
+      if (container && window.ResizeObserver) {
+        var ro = new ResizeObserver(postHeight);
+        ro.observe(container);
+      }
+      window.addEventListener('resize', postHeight);
+      window.addEventListener('message', function(event) {
+        if (event.data === 'REQUEST_INVOICE_HEIGHT') {
+          postHeight();
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
