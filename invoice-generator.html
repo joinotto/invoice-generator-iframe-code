@@ -868,6 +868,9 @@
       }
 
       window.addEventListener('resize', postHeight);
+       // --- ADD THESE TWO LINES ---
+    window.addEventListener('orientationchange', postHeight);
+    document.addEventListener('visibilitychange', postHeight);
 
       window.addEventListener('message', function(event) {
         if (event.data === 'REQUEST_INVOICE_HEIGHT') {
