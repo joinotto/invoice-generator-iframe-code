@@ -301,9 +301,7 @@
       </button>
     );
 
-    
-              </div>
-            </div>// --- InvoicePreview Component (trimmed for brevity; include all fields as needed) ---
+    // --- InvoicePreview Component (trimmed for brevity; include all fields as needed) ---
     const InvoicePreview = ({ state, isForPdf = false }) => {
       const subtotal = state.items.reduce((acc, item) => acc + (Number(item.rate) || 0) * (Number(item.quantity) || 0), 0);
       const total = subtotal;
@@ -324,26 +322,26 @@
             </div>
           </div>
           <div className="grid grid-cols-2 gap-x-8 mb-10 text-base">
-  <div>
-    <h3 className="text-lg font-semibold uppercase tracking-wider text-gray-600 mb-3 text-sm">From</h3>
-    <div className="space-y-1 text-gray-900">
-      <p className="font-medium">{state.fromName || 'Your Company Name'}</p>
-      <p className="break-words">{state.fromEmail || 'your.email@example.com'}</p>
-      <p>{state.fromAddress1 || '123 Main St, City, State, Zip'}</p>
-      {state.fromAddress2 && <p>{state.fromAddress2}</p>}
-    </div>
-  </div>
-  <div>
-    <h3 className="text-lg font-semibold uppercase tracking-wider text-gray-600 mb-3 text-sm">To</h3>
-    <div className="space-y-1 text-gray-900">
-      <p className="font-medium">{state.toName || 'Client Company Name'}</p>
-      <p className="break-words">{state.toEmail || 'client.email@example.com'}</p>
-      <p>{state.toAddress1 || '456 Client Ave, City, State, Zip'}</p>
-      {state.toAddress2 && <p>{state.toAddress2}</p>}
-      {state.toFax && <p>Fax: {state.toFax}</p>}
-    </div>
-  </div>
-</div>
+            <div>
+              <h3 className="text-lg font-semibold uppercase tracking-wider text-gray-600 mb-3 text-sm">From</h3>
+              <div className="space-y-1 text-gray-900">
+                <p className="font-medium">{state.fromName || 'Your Company Name'}</p>
+                <p>{state.fromEmail || 'your.email@example.com'}</p>
+                <p>{state.fromAddress1 || '123 Main St, City, State, Zip'}</p>
+                {state.fromAddress2 && <p>{state.fromAddress2}</p>}
+              </div>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold uppercase tracking-wider text-gray-600 mb-3 text-sm">To</h3>
+              <div className="space-y-1 text-gray-900">
+                <p className="font-medium">{state.toName || 'Client Company Name'}</p>
+                <p>{state.toEmail || 'client.email@example.com'}</p>
+                <p>{state.toAddress1 || '456 Client Ave, City, State, Zip'}</p>
+                {state.toAddress2 && <p>{state.toAddress2}</p>}
+                {state.toFax && <p>Fax: {state.toFax}</p>}
+              </div>
+            </div>
+          </div>
           <div className="mb-10">
             <table className="w-full">
               <thead>
@@ -555,16 +553,6 @@
                 alert(`Could not generate PDF. Error: ${error instanceof Error ? error.message : String(error)}`);
             } finally {
                 setState(prev => ({ ...prev, isGeneratingPdf: false }));
-                setTimeout(() => {
-    const container = document.getElementById('invoice-generator-embed-container');
-    if (container && window.parent && typeof window.parent.postMessage === 'function') {
-      window.parent.postMessage(
-        { type: 'INVOICE_IFRAME_HEIGHT', height: container.scrollHeight },
-        '*'
-      );
-    }
-  }, 120);
-}
             }
         }, 800); 
       };
@@ -631,19 +619,7 @@
                       type="button"
                       role="tab"
                       aria-selected={state.activeTab === tab.key}
-                     onClick={() => {
-  setState(s => ({ ...s, activeTab: tab.key }));
-  setTimeout(() => {
-    const container = document.getElementById('invoice-generator-embed-container');
-    if (container && window.parent && typeof window.parent.postMessage === 'function') {
-      window.parent.postMessage(
-        { type: 'INVOICE_IFRAME_HEIGHT', height: container.scrollHeight },
-        '*'
-      );
-    }
-  }, 120); // 120ms to let the UI update first
-}}
-
+                      onClick={() => setState(s => ({ ...s, activeTab: tab.key }))}
                       className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                         state.activeTab === tab.key
                           ? 'bg-indigo-100 text-indigo-700'
@@ -846,12 +822,6 @@
         </div>
       );
     };
-
-    <script>
-window.onerror = function(msg,src,lineno,colno,err){
-  document.body.innerHTML = '<pre style="color:red;">'+msg+'\n'+(err&&err.stack?err.stack:'')+'</pre>';
-};
-</script>
 
      // --- Mount React App ---
     const embedRootElement = document.getElementById('invoice-generator-embed-root');
