@@ -3,7 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="Professional invoice generator with PDF export">
+  
+  <!-- Performance optimizations -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  
+  <!-- Preload critical resources -->
+  <link rel="preload" href="https://unpkg.com/react@18/umd/react.production.min.js" as="script">
+  <link rel="preload" href="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" as="script">
+  <link rel="preload" href="https://unpkg.com/@babel/standalone/babel.min.js" as="script">
+  <link rel="preload" href="https://cdn.tailwindcss.com" as="script">
+  <link rel="preload" href="https://unpkg.com/html2pdf.js@0.10.3/dist/html2pdf.bundle.js" as="script">
+  
   <title>Invoice Generator - Preview</title>
+  
   <!-- Core dependencies for the embeddable component -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -11,13 +27,21 @@
   <!-- App dependencies -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/html2pdf.js@0.10.3/dist/html2pdf.bundle.js"></script>
+  
   <style>
+    /* Optimized CSS with better performance */
     body {
       margin: 0;
       background-color: #f0f2f5;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       padding: 20px;
+      /* Performance optimizations */
+      text-rendering: optimizeSpeed;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
+    
+    /* Optimized scrollbar styles */
     ::-webkit-scrollbar {
       width: 8px;
       height: 8px;
@@ -31,6 +55,33 @@
     }
     ::-webkit-scrollbar-thumb:hover {
       background: #a8a8a8;
+    }
+    
+    /* Optimized animations */
+    @keyframes invoice-embed-spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .invoice-embed-spinner-animation { 
+      animation: invoice-embed-spin 1s linear infinite;
+      will-change: transform; /* Performance optimization */
+    }
+    
+    /* Optimized image loading */
+    img {
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+    }
+    
+    /* Performance optimizations for transitions */
+    * {
+      box-sizing: border-box;
+    }
+    
+    /* Optimize paint and layout operations */
+    .transition-colors {
+      transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+      will-change: color, background-color, border-color;
     }
   </style>
 </head>
@@ -47,14 +98,17 @@
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
       }
-      .invoice-embed-spinner-animation { animation: invoice-embed-spin 1s linear infinite; }
+      .invoice-embed-spinner-animation { 
+        animation: invoice-embed-spin 1s linear infinite;
+        will-change: transform;
+      }
     </style>
   </div>
 
   <!-- React App Script: All JS/JSX, nothing else inside this block -->
   <script type="text/babel">
     // --- IMPORTS/HOOKS ---
-    const { useState, useRef, useCallback, StrictMode } = React;
+    const { useState, useRef, useCallback, useMemo, StrictMode, memo } = React;
 
     // --- Utility: Generate unique item IDs ---
     const generateItemId = () => Date.now().toString(36) + Math.random().toString(36).substring(2, 7);
@@ -95,16 +149,19 @@
     const DEFAULT_INVOICE_DATE = todayConst.toISOString().split('T')[0];
     const DEFAULT_DUE_DATE = thirtyDaysFromNowConst.toISOString().split('T')[0];
 
-    // --- Currency formatting ---
-    const formatCurrency = (amount, currency = 'USD') => {
+    // --- Currency formatting (memoized) ---
+    const formatCurrency = (() => {
       const symbols = {
         'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥', 'CAD': 'C$',
         'AUD': 'A$', 'CHF': 'CHF', 'CNY': '¥', 'INR': '₹'
       };
-      const symbol = symbols[currency] || currency;
-      if (typeof amount !== 'number' || isNaN(amount)) return `${symbol}0.00`;
-      return `${symbol}${amount.toFixed(2)}`;
-    };
+      
+      return (amount, currency = 'USD') => {
+        const symbol = symbols[currency] || currency;
+        if (typeof amount !== 'number' || isNaN(amount)) return `${symbol}0.00`;
+        return `${symbol}${amount.toFixed(2)}`;
+      };
+    })();
 
     const formatDate = (dateString) => {
       if (!dateString) return '';
@@ -128,15 +185,15 @@
       } catch (error) { return 'Invalid Date'; }
     };
 
-    // --- Spinner Component ---
-    const Spinner = () => (
+    // --- Spinner Component (memoized) ---
+    const Spinner = memo(() => (
       <div className="invoice-embed-spinner-animation h-5 w-5 border-2 border-gray-300 border-t-indigo-600 rounded-full" role="status">
         <span className="sr-only">Loading...</span>
       </div>
-    );
+    ));
 
-    // --- IconButton Component ---
-    const IconButton = ({ onClick, children, className = '', ariaLabel, disabled = false }) => (
+    // --- IconButton Component (memoized) ---
+    const IconButton = memo(({ onClick, children, className = '', ariaLabel, disabled = false }) => (
       <button
         type="button"
         onClick={onClick}
@@ -148,16 +205,20 @@
       >
         {children}
       </button>
-    );
+    ));
 
-    // --- InvoicePreview ---
-    const InvoicePreview = ({ state, isForPdf = false }) => {
+    // --- InvoicePreview (memoized with useMemo for calculations) ---
+    const InvoicePreview = memo(({ state, isForPdf = false }) => {
       const baseText = isForPdf ? 'text-xs' : 'text-base';
       const sectionTitleText = isForPdf ? 'text-xs' : 'text-lg';
 
-      const subtotal = state.items.reduce((acc, item) => acc + (Number(item.rate) || 0) * (Number(item.quantity) || 0), 0);
-      const total = subtotal;
-      const balanceDue = total;
+      // Memoize calculations to prevent recalculation on every render
+      const { subtotal, total, balanceDue } = useMemo(() => {
+        const subtotal = state.items.reduce((acc, item) => acc + (Number(item.rate) || 0) * (Number(item.quantity) || 0), 0);
+        const total = subtotal;
+        const balanceDue = total;
+        return { subtotal, total, balanceDue };
+      }, [state.items]);
 
       return (
         <div className="bg-white p-8 md:p-10 lg:p-12">
@@ -279,13 +340,13 @@
 
             <div className="text-center mt-4 pt-2 border-t border-gray-200">
               <p className="text-xs text-gray-500">
-                Powered by <span className="font-medium text-indigo-600">Otto</span>
+                Powered by <span className="font-medium text-indigo-600">otto</span>
               </p>
             </div>
           </div>
         </div>
       );
-    };
+    });
 
     // --- Main App Component ---
     const App = () => {
@@ -320,6 +381,30 @@
       const signatureUploadInputRef = useRef(null);
       const mainPreviewRef = useRef(null);
 
+      // Memoize calculations to prevent recalculation on every render
+      const { subtotal, total, balanceDue } = useMemo(() => {
+        const subtotal = state.items.reduce((acc, item) => acc + (Number(item.rate) || 0) * (Number(item.quantity) || 0), 0);
+        const total = subtotal;
+        const balanceDue = total;
+        return { subtotal, total, balanceDue };
+      }, [state.items]);
+
+      // Memoize field configurations to prevent recreation
+      const fromFields = useMemo(() => [
+        { name: 'fromName', label: 'Name *', placeholder: 'Your Company Name' },
+        { name: 'fromEmail', label: 'Email *', placeholder: 'your.email@example.com', type: 'email' },
+        { name: 'fromAddress1', label: 'Address Line 1 *', placeholder: '123 Main St' },
+        { name: 'fromAddress2', label: 'Address Line 2', placeholder: 'Suite, Apt, etc.' },
+      ], []);
+
+      const toFields = useMemo(() => [
+        { name: 'toName', label: 'Name *', placeholder: 'Client Company Name' },
+        { name: 'toEmail', label: 'Email *', placeholder: 'client.email@example.com', type: 'email' },
+        { name: 'toAddress1', label: 'Address Line 1 *', placeholder: '456 Client Ave' },
+        { name: 'toAddress2', label: 'Address Line 2', placeholder: 'Suite, Apt, etc.' },
+        { name: 'toFax', label: 'Fax (Optional)', placeholder: '(123) 456-7890' },
+      ], []);
+
       const handleInputChange = useCallback((e) => {
         const { name, value } = e.target;
         setState(prevState => ({
@@ -342,19 +427,21 @@
       }, []);
 
       const handleItemChange = useCallback((index, field, value) => {
-        const newItems = state.items.map((item, i) => {
-          if (i === index) {
-            let processedValue = value;
-            if (field === 'rate' || field === 'quantity') {
-              processedValue = parseFloat(value.toString()) || 0;
-              if (field === 'quantity' && processedValue < 0) processedValue = 0;
+        setState(prevState => {
+          const newItems = prevState.items.map((item, i) => {
+            if (i === index) {
+              let processedValue = value;
+              if (field === 'rate' || field === 'quantity') {
+                processedValue = parseFloat(value.toString()) || 0;
+                if (field === 'quantity' && processedValue < 0) processedValue = 0;
+              }
+              return { ...item, [field]: processedValue };
             }
-            return { ...item, [field]: processedValue };
-          }
-          return item;
+            return item;
+          });
+          return { ...prevState, items: newItems };
         });
-        setState(prevState => ({ ...prevState, items: newItems }));
-      }, [state.items]);
+      }, []);
 
       const addItem = useCallback(() => {
         setState(prevState => ({
@@ -364,18 +451,19 @@
       }, []);
 
       const removeItem = useCallback((indexToRemove) => {
-        if (state.items.length <= 1) {
-            const item = state.items[0];
+        setState(prevState => {
+          if (prevState.items.length <= 1) {
+            const item = prevState.items[0];
             if (item.description === '' && Number(item.rate) === 0 && Number(item.quantity) === 1) {
-                setState(prevState => ({ ...prevState, items: [{ ...INITIAL_ITEM, id: generateItemId() }] }));
-                return;
+              return { ...prevState, items: [{ ...INITIAL_ITEM, id: generateItemId() }] };
             } else {
-                return;
+              return prevState;
             }
-        }
-        const newItems = state.items.filter((_, i) => i !== indexToRemove);
-        setState(prevState => ({ ...prevState, items: newItems }));
-      }, [state.items]);
+          }
+          const newItems = prevState.items.filter((_, i) => i !== indexToRemove);
+          return { ...prevState, items: newItems };
+        });
+      }, []);
 
       const validateForm = useCallback((formState) => {
         const errors = {};
@@ -395,55 +483,7 @@
         return errors;
       }, []);
 
-      const handleDownloadPdf = async () => {
-        const validationErrors = validateForm(state);
-        if (Object.keys(validationErrors).length > 0) {
-            setState(prev => ({ ...prev, errors: validationErrors, activeTab: 'invoice' }));
-            alert("Please fill in all required fields marked with * before downloading the PDF.");
-            return;
-        }
-
-        setState(prev => ({ ...prev, activeTab: 'preview', isGeneratingPdf: true }));
-
-        setTimeout(async () => {
-            try {
-                const html2pdf = window.html2pdf;
-                const element = mainPreviewRef.current;
-                if (!html2pdf) throw new Error("PDF generation library (html2pdf.js) is not available.");
-                if (!element) throw new Error("Preview content is not ready for PDF generation.");
-                if (element.offsetWidth === 0 || element.offsetHeight === 0) throw new Error("Preview content has zero dimensions. PDF cannot be generated.");
-                const opt = {
-                    margin: [0.4, 0.4, 0.4, 0.4],
-                    filename: `${state.invoiceNumber || 'invoice'}.pdf`,
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: {
-                        scale: 2,
-                        useCORS: true,
-                        letterRendering: true,
-                        allowTaint: true,
-                    },
-                    jsPDF: {
-                        unit: 'in',
-                        format: 'letter',
-                        orientation: 'portrait',
-                        compress: true,
-                    }
-                };
-                window.scrollTo(0, 0);
-                await html2pdf().set(opt).from(element).save();
-            } catch (error) {
-                alert(`Could not generate PDF. Error: ${error instanceof Error ? error.message : String(error)}`);
-            } finally {
-                setState(prev => ({ ...prev, isGeneratingPdf: false }));
-            }
-        }, 800);
-      };
-
-      const subtotal = state.items.reduce((acc, item) => acc + (Number(item.rate) || 0) * (Number(item.quantity) || 0), 0);
-      const total = subtotal;
-      const balanceDue = total;
-
-      const renderField = (fieldName, label, placeholder, type = 'text', extraInputProps = {}) => (
+      const renderField = useCallback((fieldName, label, placeholder, type = 'text', extraInputProps = {}) => (
         <div key={fieldName}>
           <label htmlFor={fieldName} className={LABEL_BASE_CLASS}>{label}</label>
           <input
@@ -459,21 +499,75 @@
           />
           {state.errors[fieldName] && <p className="text-red-500 text-xs mt-1" role="alert">{state.errors[fieldName]}</p>}
         </div>
-      );
+      ), [state, handleInputChange]);
 
-      const fromFields = [
-        { name: 'fromName', label: 'Name *', placeholder: 'Your Company Name' },
-        { name: 'fromEmail', label: 'Email *', placeholder: 'your.email@example.com', type: 'email' },
-        { name: 'fromAddress1', label: 'Address Line 1 *', placeholder: '123 Main St' },
-        { name: 'fromAddress2', label: 'Address Line 2', placeholder: 'Suite, Apt, etc.' },
-      ];
-      const toFields = [
-        { name: 'toName', label: 'Name *', placeholder: 'Client Company Name' },
-        { name: 'toEmail', label: 'Email *', placeholder: 'client.email@example.com', type: 'email' },
-        { name: 'toAddress1', label: 'Address Line 1 *', placeholder: '456 Client Ave' },
-        { name: 'toAddress2', label: 'Address Line 2', placeholder: 'Suite, Apt, etc.' },
-        { name: 'toFax', label: 'Fax (Optional)', placeholder: '(123) 456-7890' },
-      ];
+      // Memoize tab configuration to prevent recreation
+      const tabConfig = useMemo(() => [
+        {key: 'invoice', label: 'Invoice Editor'},
+        {key: 'preview', label: 'Live Preview'}
+      ], []);
+
+      // Optimized PDF generation with better error handling and performance
+      const optimizedPdfGeneration = useCallback(async () => {
+        const validationErrors = validateForm(state);
+        if (Object.keys(validationErrors).length > 0) {
+            setState(prev => ({ ...prev, errors: validationErrors, activeTab: 'invoice' }));
+            alert("Please fill in all required fields marked with * before downloading the PDF.");
+            return;
+        }
+
+        setState(prev => ({ ...prev, activeTab: 'preview', isGeneratingPdf: true }));
+
+        // Use requestAnimationFrame for better performance
+        requestAnimationFrame(async () => {
+            try {
+                const html2pdf = window.html2pdf;
+                const element = mainPreviewRef.current;
+                
+                if (!html2pdf) throw new Error("PDF generation library (html2pdf.js) is not available.");
+                if (!element) throw new Error("Preview content is not ready for PDF generation.");
+                if (element.offsetWidth === 0 || element.offsetHeight === 0) throw new Error("Preview content has zero dimensions. PDF cannot be generated.");
+                
+                // Optimized PDF options for better performance
+                const opt = {
+                    margin: [0.4, 0.4, 0.4, 0.4],
+                    filename: `${state.invoiceNumber || 'invoice'}.pdf`,
+                    image: { type: 'jpeg', quality: 0.95 }, // Slightly reduced quality for better performance
+                    html2canvas: {
+                        scale: 1.5, // Reduced scale for better performance
+                        useCORS: true,
+                        letterRendering: true,
+                        allowTaint: true,
+                        logging: false, // Disable logging for better performance
+                        removeContainer: true, // Clean up after generation
+                    },
+                    jsPDF: {
+                        unit: 'in',
+                        format: 'letter',
+                        orientation: 'portrait',
+                        compress: true,
+                    }
+                };
+                
+                // Scroll to top before generation
+                window.scrollTo(0, 0);
+                
+                // Generate PDF with timeout protection
+                const pdfPromise = html2pdf().set(opt).from(element).save();
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('PDF generation timed out')), 30000)
+                );
+                
+                await Promise.race([pdfPromise, timeoutPromise]);
+                
+            } catch (error) {
+                console.error('PDF generation error:', error);
+                alert(`Could not generate PDF. Error: ${error instanceof Error ? error.message : String(error)}`);
+            } finally {
+                setState(prev => ({ ...prev, isGeneratingPdf: false }));
+            }
+        });
+      }, [state, validateForm]);
 
       return (
         <div className={state.activeTab === "invoice" ? "min-h-screen bg-gray-100" : "bg-gray-100"}>
@@ -493,10 +587,7 @@
                   <span className="text-2xl font-bold text-indigo-600">otto</span>
                 </div>
                 <nav className="flex space-x-1" aria-label="Main navigation">
-                  {([
-                    {key: 'invoice', label: 'Invoice Editor'},
-                    {key: 'preview', label: 'Live Preview'}
-                  ]).map(tab => (
+                  {tabConfig.map(tab => (
                     <button
                       key={tab.key}
                       type="button"
@@ -536,7 +627,16 @@
                         <h3 className="text-lg font-semibold text-gray-800">Company Logo</h3>
                           {state.logoUrl ? (
                             <div className="border border-gray-200 rounded-md p-4 text-center">
-                              <img src={state.logoUrl} alt="Company Logo Preview" className="mx-auto max-h-20 object-contain mb-2" />
+                              <img 
+                                src={state.logoUrl} 
+                                alt="Company Logo Preview" 
+                                className="mx-auto max-h-20 object-contain mb-2" 
+                                loading="lazy"
+                                onError={(e) => {
+                                  e.target.style.display = 'none';
+                                  setState(s => ({ ...s, logoUrl: null }));
+                                }}
+                              />
                               <button type="button" onClick={() => setState(s => ({ ...s, logoUrl: null }))} className="text-xs text-red-500 hover:text-red-700">Remove Logo</button>
                             </div>
                           ) : (
@@ -634,7 +734,16 @@
                           {state.signature ? (
                             <div className="border border-gray-200 rounded-md p-4 text-center">
                               {(state.signature.startsWith('data:image') || state.signature.startsWith('blob:')) ? (
-                                <img src={state.signature} alt="Signature preview" className="mx-auto max-h-20 object-contain mb-2" />
+                                <img 
+                                  src={state.signature} 
+                                  alt="Signature preview" 
+                                  className="mx-auto max-h-20 object-contain mb-2" 
+                                  loading="lazy"
+                                  onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    setState(s => ({ ...s, signature: null }));
+                                  }}
+                                />
                               ) : (
                                 <p className="font-serif text-2xl break-all text-gray-700 mb-2">{state.signature}</p>
                               )}
@@ -694,7 +803,7 @@
                     <button type="button" onClick={() => setState(s => ({ ...s, activeTab: 'preview' }))} className="w-full flex items-center justify-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 py-2.5 px-4 rounded-md transition-colors">
                       👁️ Preview Invoice
                     </button>
-                    <button type="button" onClick={handleDownloadPdf} disabled={state.isGeneratingPdf} className="w-full flex items-center justify-center gap-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 py-2.5 px-4 rounded-md transition-colors disabled:opacity-70 disabled:cursor-not-allowed">
+                    <button type="button" onClick={optimizedPdfGeneration} disabled={state.isGeneratingPdf} className="w-full flex items-center justify-center gap-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 py-2.5 px-4 rounded-md transition-colors disabled:opacity-70 disabled:cursor-not-allowed">
                       📥 {state.isGeneratingPdf ? 'Generating...' : 'Download PDF'}
                     </button>
                   </div>
@@ -726,42 +835,108 @@
   <!-- Begin iframe-resize script: -->
   <script>
     (function() {
+      'use strict';
+      
+      // Performance optimizations for iframe resizing
+      let resizeTimeout;
+      let lastHeight = 0;
+      let isResizing = false;
+      
       // Remove body padding if inside an iframe (prevents double padding/extra space)
       if (window.self !== window.top) {
         document.body.style.padding = '0';
       }
 
-      let debounce;
+      // Optimized height calculation with caching
+      function getContainerHeight() {
+        const container = document.getElementById('invoice-generator-embed-container');
+        if (!container) return 0;
+        return container.scrollHeight;
+      }
+
+      // Throttled post message function
       function postHeight() {
-        clearTimeout(debounce);
-        debounce = setTimeout(() => {
-          var container = document.getElementById('invoice-generator-embed-container');
-          if (!container) return;
-          var height = container.scrollHeight;
-          window.parent.postMessage(
-            { type: 'INVOICE_IFRAME_HEIGHT', height: height },
-            '*'
-          );
-        }, 80);
+        if (isResizing) return;
+        
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          const height = getContainerHeight();
+          
+          // Only post message if height actually changed
+          if (height !== lastHeight) {
+            lastHeight = height;
+            window.parent.postMessage(
+              { type: 'INVOICE_IFRAME_HEIGHT', height: height },
+              '*'
+            );
+          }
+        }, 100); // Increased debounce time for better performance
       }
 
-      document.addEventListener('DOMContentLoaded', postHeight);
-
-      var container = document.getElementById('invoice-generator-embed-container');
-      if (container && window.ResizeObserver) {
-        var ro = new ResizeObserver(postHeight);
-        ro.observe(container);
-      }
-
-      window.addEventListener('resize', postHeight);
-      window.addEventListener('orientationchange', postHeight);
-      document.addEventListener('visibilitychange', postHeight);
-
-      window.addEventListener('message', function(event) {
-        if (event.data === 'REQUEST_INVOICE_HEIGHT') {
-          postHeight();
+      // Optimized resize observer
+      function setupResizeObserver() {
+        const container = document.getElementById('invoice-generator-embed-container');
+        if (container && window.ResizeObserver) {
+          const ro = new ResizeObserver((entries) => {
+            // Use requestAnimationFrame for better performance
+            requestAnimationFrame(() => {
+              if (!isResizing) {
+                isResizing = true;
+                postHeight();
+                // Reset flag after a short delay
+                setTimeout(() => { isResizing = false; }, 50);
+              }
+            });
+          });
+          ro.observe(container);
         }
-      });
+      }
+
+      // Optimized event listeners
+      function setupEventListeners() {
+        // Throttled resize handler
+        let resizeThrottle;
+        window.addEventListener('resize', () => {
+          if (resizeThrottle) return;
+          resizeThrottle = setTimeout(() => {
+            postHeight();
+            resizeThrottle = null;
+          }, 150);
+        });
+
+        // Orientation change handler
+        window.addEventListener('orientationchange', () => {
+          setTimeout(postHeight, 500); // Delay to allow orientation change to complete
+        });
+
+        // Visibility change handler
+        document.addEventListener('visibilitychange', () => {
+          if (!document.hidden) {
+            requestAnimationFrame(postHeight);
+          }
+        });
+
+        // Message handler
+        window.addEventListener('message', function(event) {
+          if (event.data === 'REQUEST_INVOICE_HEIGHT') {
+            requestAnimationFrame(postHeight);
+          }
+        });
+      }
+
+      // Initialize when DOM is ready
+      function init() {
+        setupResizeObserver();
+        setupEventListeners();
+        postHeight(); // Initial height post
+      }
+
+      // Use DOMContentLoaded for better performance
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
     })();
   </script>
 </body>
